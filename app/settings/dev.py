@@ -19,6 +19,7 @@ CORS_ORIGIN_WHITELIST = [
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_SUPPORTS_CREDENTIALS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
 SESSION_COOKIE_SAMESITE=None
 
 def show_toolbar(request):
@@ -49,3 +50,33 @@ DATABASES = {
     #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     # }
 }
+
+
+## Logging configuration
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "rq_console": {
+            "format": "%(asctime)s %(message)s",
+            "datefmt": "%H:%M:%S",
+        },
+    },
+    "handlers": {
+        "rq_console": {
+            "level": "DEBUG",
+            'class': 'logging.StreamHandler',
+            "formatter": "rq_console",
+        },
+    },
+    'loggers': {
+        "rq.worker": {
+            "handlers": ["rq_console",],
+            "level": "DEBUG"
+        },
+    }
+}
+
+
+MAPPING_TOOL_URL = 'http://localhost:8080/node/'

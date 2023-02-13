@@ -7,7 +7,6 @@ from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
-from django.forms import formset_factory
 from django.urls import reverse
 from django.db.models import Q
 from datetime import datetime
@@ -24,14 +23,12 @@ import re
 import natsort
 
 from rest_framework import viewsets
-from ..serializers import *
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from ..tasks import *
-from ..forms import *
-from ..models import *
+from mapping.tasks import *
+from mapping.models import *
 
 class Permission_MappingProject_Access(permissions.BasePermission):
     """
@@ -141,7 +138,7 @@ class CreateTasks(viewsets.ViewSet):
                     component_title = component_obj.component_title
                     handled.append({
                         'taskid'    : obj.id,
-                        'user'      : obj.user.username,
+                        'user'      : obj.user.get_full_name() if obj.user.first_name else obj.get_username(),
                         'status'    : obj.status.status_title,
                         'reqid'     : component,
                         'present'   : present,

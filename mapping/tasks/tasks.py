@@ -8,8 +8,8 @@ from celery.result import AsyncResult
 from celery.decorators import periodic_task
 from celery.utils.log import get_task_logger
 import xmltodict
-from ..forms import *
-from ..models import *
+
+from mapping.models import *
 import urllib.request
 from urllib.parse import quote, quote_plus
 from pandas import read_excel, read_csv
@@ -27,6 +27,7 @@ environ.Env.read_env(env.str('ENV_PATH', '.env'))
 # url = 'https://raw.githubusercontent.com/mertenssander/python_snowstorm_client/' + \
 #     branch+'/snowstorm_client.py'
 # urllib.request.urlretrieve(url, 'snowstorm_client.py')
+import pprint
 from snowstorm_client import Snowstorm
 
 
@@ -37,7 +38,6 @@ logger = get_task_logger(__name__)
 
 @shared_task
 def UpdateECL1Task(record_id, query):
-
     max_tries = 10
     sleep_time = 10
     tries = 0
@@ -75,6 +75,7 @@ def UpdateECL1Task(record_id, query):
                 print(f"Looking for a total of {total_results}")
                 # Update query count
                 queryCount += 1
+                pprint.pprint(response.json())
 
                 # Loop while the cacheTemp is smaller than the total results
                 while counter < total_results:
@@ -91,11 +92,10 @@ def UpdateECL1Task(record_id, query):
                     # If there are more results than currently present in cacheTemp, run another query
                     if counter < total_results:
                         # Request results
-                        url = "https://snowstorm.test-nictiz.nl/MAIN/SNOMEDCT-NL/concepts?activeFilter=true&limit=10000&searchAfter={}&ecl={}".format(
+                        url = "https://snowstorm.test-nictiz.nl/MAIN/SNOMEDCT-NL/concepts?activeFilter=true&limit=1000&searchAfter={}&ecl={}".format(
                             quote_plus(items.get('searchAfter')), 
                             quote_plus(query).strip(),
                         )
-                        print(url)
                         response = requests.get(url, params = {'Accept-Language': "nl"})
                         items = json.loads(response.text)
                         # Update query count
@@ -300,25 +300,26 @@ def import_snomed_snowstorm(payload=None):
             'definitionStatus' : str(concept['definitionStatus']),
         }
 
-    def retrieve_concepts():
-        search_after = ''
-        output = []
-        while True:
-            url = f"https://snowstorm.test-nictiz.nl/browser/MAIN%2FSNOMEDCT-NL/concepts?searchAfter={search_after}&number=0&size=10000"
-            req = urllib.request.Request(url)
-            req.add_header('Accept-Language', 'nl')
-            response = urllib.request.urlopen(req).read()
-            result = json.loads(response.decode('utf-8'))
+    def retrieve_concepts(output=None, search_after=None):
+        search_after = '' if search_after is None else search_after
+        output = [] if output is None else output
+        url = f"https://snowstorm.test-nictiz.nl/browser/MAIN%2FSNOMEDCT-NL/concepts?searchAfter={search_after}&number=0&size=1000"
+        req = urllib.request.Request(url)
+        req.add_header('Accept-Language', 'nl')
+        response = urllib.request.urlopen(req).read()
+        result = json.loads(response.decode('utf-8'))
 
-            search_after = result['searchAfter']
-            total = result['total']
-            # total = 5
+        search_after = result['searchAfter']
+        total = result['total']
+        # total = 5
             
-            concept_list = [concept_data(concept) for concept in result['items']]
+        concept_list = [concept_data(concept) for concept in result['items']]
             
-            output.extend(concept_list)
-            print(f"Retrieved {len(result['items'])} - {len(output)}/{total} - {round((len(output)/total*100),0)}%")
-            if len(output) >= total: break
+        output.extend(concept_list)
+        print(f"Retrieved {len(result['items'])} - {len(output)}/{total} - {round((len(output)/total*100),0)}%")
+        if len(output) < 3000:  # total:
+            return retrieve_concepts(output=output, search_after=search_after)
+
         return output
 
     print(f"Starting [@shared_task: import_snomed_snowstorm]")
@@ -371,6 +372,7 @@ def add_hierarchy_snomed():
     components = MappingCodesystemComponent.objects.filter(
         codesystem_id_id = '1'
     )
+    print(components.count())
     for component in components:
         conceptid = component.component_id
         # component.descriptions = snowstorm.getDescriptions(id=str(conceptid)).get('categorized',{})

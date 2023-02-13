@@ -7,13 +7,12 @@ import urllib.parse
 from django.utils import timezone
 from django.db.models import Q
 import json
-from ..models import *
+from mapping.models import *
 import time
 import environ
 
 from rest_framework import viewsets
-from ..tasks import *
-from ..serializers import *
+from mapping.tasks import *
 from rest_framework import status, views, permissions
 from rest_framework.response import Response
 

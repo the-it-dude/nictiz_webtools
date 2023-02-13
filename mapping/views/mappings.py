@@ -7,7 +7,6 @@ from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
-from django.forms import formset_factory
 from django.urls import reverse
 from django.db.models import Q
 from datetime import datetime
@@ -25,14 +24,12 @@ import natsort
 import uuid
 
 from rest_framework import viewsets
-from ..serializers import *
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from ..tasks import *
-from ..forms import *
-from ..models import *
+from mapping.tasks import *
+from mapping.models import *
 
 # Import environment variables
 env = environ.Env(DEBUG=(bool, False))
@@ -499,6 +496,7 @@ class MappingTargetFromReverse(viewsets.ViewSet):
         except Exception as e:
             return Response(f"[MappingTargetFromReverse/create] @ {request.user.username} - Error: {str(e)}")
 
+
 class MappingTargets(viewsets.ViewSet):
     permission_classes = [Permission_MappingProject_Access]
 
@@ -592,6 +590,7 @@ class MappingTargets(viewsets.ViewSet):
                     elif task.project_id.project_type == '4':
                         print("MappingTargets/create - Handling ECL-1 mapping targets for task",task.id)
                         
+                        print(repr(request.data))
                         queries = request.data.get('targets').get('queries')
                         for query in queries:
                             print("Handling query",str(query)[:100],".........")
@@ -599,7 +598,7 @@ class MappingTargets(viewsets.ViewSet):
                                 print('delete query ',query.get('id'))
                                 current_query = MappingEclPart.objects.get(id = query.get('id'))
                                 current_query.delete()
-                            else:                           
+                            else:
                                 if query.get('id') == 'extra' and query.get('description') and query.get('query') and query.get('correlation'):
                                     print(f"Creating new query with description {query.get('description')} and query {query.get('query')}")
                                     currentQuery = MappingEclPart.objects.create(

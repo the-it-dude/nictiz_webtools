@@ -8,8 +8,7 @@ from celery.decorators import periodic_task
 from celery.utils.log import get_task_logger
 from celery.execute import send_task
 import xmltodict
-from ..forms import *
-from ..models import *
+from mapping.models import *
 import urllib.request
 from pandas import read_excel, read_csv
 import environ

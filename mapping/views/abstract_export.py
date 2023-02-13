@@ -12,14 +12,12 @@ import re
 import uuid
 
 from rest_framework import viewsets
-from ..serializers import *
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from ..tasks import *
-from ..forms import *
-from ..models import *
+from mapping.tasks import *
+from mapping.models import *
 
 # Import environment variables
 env = environ.Env(DEBUG=(bool, False))

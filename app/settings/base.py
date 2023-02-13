@@ -199,3 +199,5 @@ LOGGING = {
         },
     },
 }
+
+MAPPING_TOOL_URL = 'https://termservice.test-nictiz.nl/node/'

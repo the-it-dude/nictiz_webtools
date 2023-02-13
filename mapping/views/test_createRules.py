@@ -1,20 +1,25 @@
+from time import time
+
 from rest_framework import viewsets
-from ..serializers import *
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework import permissions
-from ..models import *
 
-from time import time
+from mapping.models import (
+    MappingRule,
+    MappingEclPart,
+    MappingCodesystemComponent
+)
 
-from ..tasks import *
-from ..forms import *
-from ..models import *
+# from mapping.tasks import *
+
 
 class optimizedCreateRules(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def list(self, request):
         return Response("OK")
+
     def retrieve(self, request, pk=None):
         print(f"[test_createRules/optimizedCreateRules retrieve] requested @ {time.strftime('%c')} with pk {pk}")
         try:

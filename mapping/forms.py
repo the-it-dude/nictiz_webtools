@@ -1,6 +1,7 @@
 from django import forms
-from .models import *
+from mapping.models import *
 # from django_select2.forms import HeavySelect2Widget
+
 
 class MappingForm(forms.Form):
     id = forms.CharField(widget=forms.HiddenInput(), label='id', max_length=100)

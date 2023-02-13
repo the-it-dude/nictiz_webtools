@@ -9,10 +9,10 @@ services:
     image: postgres:10.3
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_DB: ${POSTGRES_PASS}
-      POSTGRES_PASS: ${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASS: ${POSTGRES_PASS}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # - pgdata:/var/lib/postgresql/data
       - postgres_backup:/backup
 #    ports:
 #      - 5432:5432
@@ -24,6 +24,7 @@ services:
       dockerfile: docker/dev/python/Dockerfile
     environment:
     - PYTHONUNBUFFERED=1
+    - PYTHONPATH=/webserver
     volumes:
       - ./:/webserver
     ports:
@@ -50,17 +51,17 @@ services:
     depends_on:
       - rabbitmq
       - postgres
-  pgadmin:
-    ports:
-      - 800:80
-    image: dpage/pgadmin4
-    environment:
-      - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_USER}"
-      - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}"
-    volumes:
-      - pgadmin:/var/lib/pgadmin
-    links:
-      - postgres
+  # pgadmin:
+  #   ports:
+  #     - 800:80
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_USER}"
+  #     - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}"
+  #   volumes:
+  #     - pgadmin:/var/lib/pgadmin
+  #   links:
+  #     - postgres
   # GUI for taskmanager Celery
   # flower:
   #   image: mher/flower
