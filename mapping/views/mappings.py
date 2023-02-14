@@ -46,6 +46,7 @@ class Permission_MappingProject_Access(permissions.BasePermission):
         if 'mapping | access' in request.user.groups.values_list('name', flat=True):
             return True
 
+
 class Permission_MappingProject_ChangeMappings(permissions.BasePermission):
     """
     Global permission check rights to change mappings.
