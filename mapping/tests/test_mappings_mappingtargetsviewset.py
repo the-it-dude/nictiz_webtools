@@ -7,19 +7,29 @@ from mapping.factories import MappingProjectFactory, MappingTaskFactory
 
 class MappingTargetsViewSetTestCase(TestCase):
     def setUp(self):
-        self.project = MappingProjectFactory()
-        self.task = MappingTaskFactory(project_id=self.project)
         self.client = Client()
         self.user = UserFactory()
 
+        mapping_access_group = GroupFactory(name="mapping | access")
         mapping_edit_group = GroupFactory(name="mapping | edit mapping")
+
+        self.user.groups.add(mapping_access_group)
         self.user.groups.add(mapping_edit_group)
         self.client.force_login(user=self.user)
 
+        self.project = MappingProjectFactory()
+        self.task = MappingTaskFactory(
+            project_id=self.project,
+            user=self.user,
+        )
+
+        self.project.access.add(self.user)
+
     def test_create_auth_required(self):
         data = {}
-        result = self.client.post(data)
-        self.assertEqual(result.status_code, 404)
+        self.client.logout()
+        result = self.client.get(path=f"/mapping/api/1.0/mappings/{self.project.pk}/")
+        self.assertEqual(result.status_code, 403)
 
     @mock.patch("mapping.views.mappings.UpdateECL1Task")
     def test_create_for_project_type_4(self, update_ecl1_task_mock):
@@ -43,5 +53,14 @@ class MappingTargetsViewSetTestCase(TestCase):
             },
             "task": self.task.id,
         }
-        result = self.client.post(path='/api/1.0/mappings', data=data)
-        self.assertEqual(result.status_code, 405)
+        result = self.client.post(
+            path="/mapping/api/1.0/mappings/",
+            data=data,
+            content_type="application/json",
+        )
+        self.assertEqual(result.status_code, 200)
+
+        self.assertEqual(
+            update_ecl1_task_mock.mock_calls,
+            [mock.call.delay(1, data["targets"]["queries"][0]["query"])],
+        )
