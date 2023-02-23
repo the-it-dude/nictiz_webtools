@@ -170,19 +170,6 @@ class MappingTargetSearch(viewsets.ViewSet):
                     "extra": result.component_extra_dict,
                 }
             )
-        ###### Full text search disabled
-        # # In addition, full text search if needed
-        # if len(output) == 0:
-        #     snomedComponents = MappingCodesystemComponent.objects.annotate(search=SearchVector('component_title','component_id',),).filter(search=query)
-        #     for result in snomedComponents:
-        #         output.append({
-        #             'text' : result.component_title,
-        #             'value': result.component_id,
-        #             'component': {'id':result.id, 'title':result.component_title},
-        #             'codesystem': {'title': result.codesystem_id.codesystem_title, 'version': result.codesystem_id.codesystem_version},
-        #             'extra': result.component_extra_dict,
-        #         })
-        # output = sorted(output, key=lambda item: len(item.get("text")), reverse=False)
         return Response(output)
 
 

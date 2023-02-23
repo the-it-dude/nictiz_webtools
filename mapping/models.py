@@ -1,8 +1,8 @@
+from django.contrib.auth.models import User
+from django.contrib.postgres.fields import ArrayField
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User
-from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import ArrayField
 
 from mapping.enums import EventActionOptions, ProjectTypes, RCStatus, RuleCorrelations
 
@@ -179,7 +179,11 @@ class MappingTaskStatus(models.Model):
     status_next = models.CharField(max_length=50)  # ID van gebruiker
 
     def __str__(self):
-        return f"{self.idD} Status ID: {self.status_id} @ project {self.project_id}: {self.status_title}"
+        return (
+            f"{self.idD} "
+            f"Status ID: {self.status_id} "
+            f"@ project {self.project_id}: {self.status_title}"
+        )
 
 
 class MappingTask(models.Model):
@@ -187,12 +191,14 @@ class MappingTask(models.Model):
 
     project_id = models.ForeignKey(MappingProject, on_delete=models.PROTECT)
     category = models.CharField(max_length=500)
+    # Uniek ID in codesystem = MappingCodesystemComponent:id
     source_component = (
-        models.ForeignKey(  # Uniek ID in codesystem = MappingCodesystemComponent:id
+        models.ForeignKey(
             MappingCodesystemComponent, on_delete=models.PROTECT
         )
     )
-    source_codesystem = models.ForeignKey(  # Uniek ID van codesystem waar vandaan in deze taak gemapt moet worden
+    # Uniek ID van codesystem waar vandaan in deze taak gemapt moet worden
+    source_codesystem = models.ForeignKey(
         MappingCodesystem,
         on_delete=models.PROTECT,
         related_name="source_codesystem_task",
@@ -200,7 +206,8 @@ class MappingTask(models.Model):
         null=True,
         blank=True,
     )
-    target_codesystem = models.ForeignKey(  # Uniek ID van codesystem waar naartoe in deze taak gemapt moet worden
+    # Uniek ID van codesystem waar naartoe in deze taak gemapt moet worden
+    target_codesystem = models.ForeignKey(
         MappingCodesystem,
         on_delete=models.PROTECT,
         related_name="target_codesystem_task",
@@ -208,10 +215,12 @@ class MappingTask(models.Model):
         null=True,
         blank=True,
     )
-    user = models.ForeignKey(  # ID van gebruiker
+    # ID van gebruiker
+    user = models.ForeignKey(
         User, on_delete=models.PROTECT, default=None, null=True, blank=True
     )
-    status = models.ForeignKey(  # ID van status
+    # ID van status
+    status = models.ForeignKey(
         MappingTaskStatus, on_delete=models.PROTECT, default=None, null=True, blank=True
     )
     task_created = models.DateTimeField(default=timezone.now)
@@ -243,12 +252,14 @@ class MappingRule(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     project_id = models.ForeignKey(MappingProject, on_delete=models.PROTECT)
-    source_component = models.ForeignKey(  # Component ID in source codesystem = MappingCodesystems:component_id
+    # Component ID in source codesystem = MappingCodesystems:component_id
+    source_component = models.ForeignKey(
         MappingCodesystemComponent,
         on_delete=models.PROTECT,
         related_name="source_component_rule",
     )
-    target_component = models.ForeignKey(  # Uniek ID van codesystem waar naartoe in deze taak gemapt moet worden
+    # Uniek ID van codesystem waar naartoe in deze taak gemapt moet worden
+    target_component = models.ForeignKey(
         MappingCodesystemComponent,
         on_delete=models.PROTECT,
         related_name="target_component_rule",
@@ -267,9 +278,6 @@ class MappingRule(models.Model):
     mapspecifies = models.ManyToManyField("MappingRule")
 
     active = models.BooleanField(max_length=50, null=True)  # Actief of deprecated rule
-
-    # def __str__(self):
-    #     return str(self.id), str(self.project_id.title), str(self.source_component.component_title)
 
 
 class MappingEclPart(models.Model):
@@ -309,7 +317,8 @@ class MappingEclPartExclusion(models.Model):
 
     For use with the vue mapping tooling
     Used to exclude the result of the ECL mapping of another component.
-    Ie. putting A80 in the list in MappingEclPartExclusion.components will exclude the results of all ECL queries linked to A80 for the linked task.
+    Ie. putting A80 in the list in MappingEclPartExclusion.components
+    will exclude the results of all ECL queries linked to A80 for the linked task.
     """
 
     task = models.ForeignKey(MappingTask, on_delete=models.PROTECT)
