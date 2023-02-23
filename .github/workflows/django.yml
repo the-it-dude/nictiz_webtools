@@ -12,6 +12,9 @@ env:
   POSTGRES_DB: ""
   POSTGRES_USER: ""
   POSTGRES_PASS: ""
+  mapping_api_secret: "312"
+  nts_client: "312"
+  nts_apikey: "321"
 
 jobs:
   build:

@@ -303,13 +303,16 @@ class MappingEclPart(models.Model):
         encoder=DjangoJSONEncoder, default=dict, blank=True, null=True
     )
 
+    # Export to mapping rules finished?
     export_finished = models.BooleanField(
         default=True
-    )  # Export to mapping rules finished?
+    )
+    # Retrieved result of query from Snowstorm?
     finished = models.BooleanField(
         default=False
-    )  # Retrieved result of query from Snowstorm?
-    failed = models.BooleanField(default=False)  # Query or export failed?
+    )
+    # Query or export failed?
+    failed = models.BooleanField(default=False)
 
 
 class MappingEclPartExclusion(models.Model):
