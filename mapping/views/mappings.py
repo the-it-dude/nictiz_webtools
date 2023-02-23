@@ -1,46 +1,33 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from django.template.defaultfilters import linebreaksbr
-from django.contrib.auth.mixins import (
-    LoginRequiredMixin,
-    PermissionRequiredMixin,
-    UserPassesTestMixin,
-)
-from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import User
-from django.urls import reverse
-from django.db.models import Q
-from datetime import datetime
-from celery.task.control import inspect, revoke
-from pandas import read_excel, read_csv
-import xmltodict
-import sys, os
-import environ
-import time
-import random
 import json
-import urllib.request
-import re
-import natsort
+import sys
+import time
 import uuid
 
+# import environ
+import requests
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User
 from rest_framework import viewsets
-from rest_framework import views, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from mapping.tasks import *
-from mapping.models import *
-
-# Import environment variables
-env = environ.Env(DEBUG=(bool, False))
-# reading .env file
-environ.Env.read_env(env.str("ENV_PATH", ".env"))
-
-from snowstorm_client import Snowstorm
+from mapping.tasks import (
+    createRulesFromEcl,
+    createRulesForAllTasks,
+    send_task,
+    update_ecl_task
+)
+from mapping.models import (
+    MappingProject,
+    MappingTask,
+    MappingEclPart,
+    MappingEclPartExclusion,
+    MappingRule,
+    MappingCodesystem,
+    MappingCodesystemComponent,
+)
 
 
 class Permission_MappingProject_Access(permissions.BasePermission):
@@ -71,7 +58,7 @@ class Permission_Secret(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if str(request.GET.get("secret")) != str(env("mapping_api_secret")):
+        if str(request.GET.get("secret")) != settings.MAPPING_API_SECRETS:
             print("Incorrect or absent secret")
             return False
         else:
@@ -836,7 +823,7 @@ class MappingTargets(viewsets.ViewSet):
                                         query=query.get("query"),
                                         mapcorrelation=query.get("correlation"),
                                     )
-                                    UpdateECL1Task.delay(
+                                    update_ecl_task.delay(
                                         currentQuery.id, query.get("query")
                                     )
                                 elif (
@@ -866,7 +853,7 @@ class MappingTargets(viewsets.ViewSet):
                                     )
                                     print("---")
                                     print(f"Handled {str(queryInDatabase)}")
-                                    UpdateECL1Task.delay(
+                                    update_ecl_task.delay(
                                         currentQuery.id, query.get("query")
                                     )
                                 else:
@@ -1129,17 +1116,8 @@ class MappingTargets(viewsets.ViewSet):
                     # Get all ECL Queries - including cached snowstorm response
                     all_results = list()
                     query_list = list()
-                    _start = time.time()
                     excluded_ids = [x["key"] for x in exclude_componentIDs]
-                    queries = (
-                        MappingEclPart.objects.filter(task=task)
-                        .select_related("task")
-                        .order_by("id")
-                    )
-                    _end = time.time()
-                    print(
-                        f"[mappings/MappingTargets retrieve] {request_uuid} | Finished retrieving queries at {time.time()-requestStart} in {_end-_start}."
-                    )
+                    queries = MappingEclPart.objects.filter(task=task).select_related("task").order_by("id")
 
                     queries_unfinished = False
                     mapping_list_unfinished = False
@@ -1153,14 +1131,10 @@ class MappingTargets(viewsets.ViewSet):
                         print(
                             f"[mappings/MappingTargets retrieve] {request_uuid} | Query {i} - adding keys to list: result_concept_ids at {time.time()-requestStart}"
                         )
-                        try:
-                            result_concept_ids += query.result.get(
+                        if query.result is not None:
+                            result_concept_ids += list(query.result.get(
                                 "concepts", {}
-                            ).keys()
-                        except Exception as e:
-                            print(
-                                f"[mappings/MappingTargets retrieve] {request_uuid} | requested by {request.user} - {pk} - at {time.time()-requestStart}: Error adding ECL results to list (empty?): {e}"
-                            )
+                            ).keys())
 
                         # Add all results to a list for easy viewing
                         print(
@@ -1179,65 +1153,35 @@ class MappingTargets(viewsets.ViewSet):
                                 print(
                                     f"[mappings/MappingTargets retrieve] {request_uuid} | Query {i} - {query.result.get('numResults','-')} results found. This is more than {max_results}: will skip checking the reason for exclusion and generate empty exclusion explanations. Time: {time.time()-requestStart}."
                                 )
-
-                            if int(query.result.get("numResults", 0)) > max_export:
-                                print(
-                                    f"[mappings/MappingTargets retrieve] {request_uuid} | Query {i} - {query.result.get('numResults','-')} results found. This is more than the acceptable max_export {max_export}: this query will not be exported to the frontend. Time: {time.time()-requestStart}."
-                                )
                             else:
                                 for key, result in query.result.get("concepts").items():
                                     if key not in excluded_ids:
                                         _start = time.time()
-                                        all_results.append(
-                                            result
-                                            | {
-                                                "queryId": query.id,
-                                                "query": query.query,
-                                                "description": query.description,
-                                                "correlation": query.mapcorrelation,
-                                            }
-                                        )
+
+                                        result.update({
+                                            "queryId": query.id,
+                                            "query": query.query,
+                                            "description": query.description,
+                                            "correlation": query.mapcorrelation,
+                                        })
+
+                                        all_results.append(result)
+
                                         _end = time.time()
                                         appending_time += _end - _start
 
                                     else:
                                         start = time.time()
-                                        if (
-                                            int(query.result.get("numResults", 0))
-                                            > max_results
-                                        ):
-                                            # exclusion_reason = "Inactief ivm performance"
-                                            result = result | {
-                                                "exclusion_reason": [
-                                                    {
-                                                        "key": 0,
-                                                        "component": {
-                                                            "component_id": 0,
-                                                            "title": "Inactief voor performance",
-                                                        },
-                                                    }
-                                                ],
-                                            }
-                                        else:
-                                            exclusion_reason = list(
-                                                filter(
-                                                    lambda x: (x["key"] == key),
-                                                    exclude_componentIDs,
-                                                )
+                                        exclusion_reason = list(
+                                            filter(
+                                                lambda x: (x["key"] == key),
+                                                exclude_componentIDs,
                                             )
+                                        )
 
-                                            # start = time.time()
-                                            # exclusion_reason = [x['key'] for x in exclude_componentIDs if x['key'] in exclude_componentIDs]
-                                            # end = time.time()
-                                            # filter_time += (end-start)
-
-                                            # _query = result
-                                            # _query.update({
-                                            #     'exclusion_reason': exclusion_reason,
-                                            # })
-                                            result = result | {
-                                                "exclusion_reason": exclusion_reason,
-                                            }
+                                        result.update({
+                                            "exclusion_reason": exclusion_reason,
+                                        })
 
                                         end = time.time()
                                         filter_time += end - start
@@ -1734,8 +1678,8 @@ class MappingAutoMapNTS(viewsets.ViewSet):
 
                 data = data = {
                     "grant_type": "client_credentials",
-                    "client_id": env("nts_client"),
-                    "client_secret": env("nts_apikey"),
+                    "client_id": settings.NTS_CLIENT_ID,
+                    "client_secret": settings.NTS_APIKEY,
                 }
                 token = requests.post(
                     "https://terminologieserver.nl/auth/realms/nictiz/protocol/openid-connect/token",

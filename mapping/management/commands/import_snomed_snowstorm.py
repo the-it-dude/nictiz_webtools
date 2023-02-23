@@ -3,24 +3,25 @@ from django.core.management.base import BaseCommand
 
 from mapping.tasks.tasks import import_snomed_snowstorm
 
+
 class Command(BaseCommand):
-    help = 'Create base groups in fresh DB'
+    help = "Create base groups in fresh DB"
 
     def fetch_headers(self, username, password):
         data = {
-            "grant_type" :"password",
+            "grant_type": "password",
             "client_id": "cli_client",
             "username": username,
-            "password": password
+            "password": password,
         }
-        token = requests.post('https://terminologieserver.nl/auth/realms/nictiz/protocol/openid-connect/token', data=data).json()
+        token = requests.post(
+            "https://terminologieserver.nl/auth/realms/nictiz/protocol/openid-connect/token",
+            data=data,
+        ).json()
         return {
-            "Content-Type" : "application/json",
-            "Authorization": f"Bearer {token['access_token']}"
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token['access_token']}",
         }
-
-
-
 
     def handle(self, *args, **options):
         # result = import_snomed_snowstorm.apply()
@@ -29,7 +30,7 @@ class Command(BaseCommand):
         data = requests.get(
             "https://terminologieserver.nl/fhir/ValueSet/$expand?url=http://snomed.info/sct?fhir_vs=refset",
             # "https://terminologieserver.nl/fhir/CodeSystem/$lookup?system=http://snomed.info/sct&code=99999003&property=child",
-            headers=headers
+            headers=headers,
         )
         print("*" * 80)
         print(repr(data))

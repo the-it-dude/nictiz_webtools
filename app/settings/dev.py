@@ -24,6 +24,8 @@ SESSION_COOKIE_SAMESITE=None
 
 def show_toolbar(request):
     return True
+
+
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
 }
@@ -45,10 +47,6 @@ DATABASES = {
        'HOST': 'postgres',
        'PORT': '5432',
    }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # }
 }
 
 
@@ -80,3 +78,6 @@ LOGGING = {
 
 
 MAPPING_TOOL_URL = 'http://localhost:8080/node/'
+
+TERMINOLOGIE_USERNAME = env("TERMINOLOGIE_USERNAME")
+TERMINOLOGIE_PASSWORD = env("TERMINOLOGIE_PASSWORD")

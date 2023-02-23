@@ -13,6 +13,8 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from pandas import read_excel, read_csv
 
+from terminologieserver.client import TerminiologieClient, TerminologieRequestError
+
 from mapping.models import *
 
 # Import environment variables
@@ -30,6 +32,58 @@ REQUEST_RETRY_SLEEP_TIME = 10
 
 
 @shared_task
+def update_ecl_task(record_id: int, query: str) -> str:
+    """Update ECL Task by performing ECL query using Telemetrie client.
+
+    Args:
+        record_id (int): MappingEclPart ID.
+        query (str): ECL Query string
+
+    Returns:
+        string representation of query result.
+    """
+
+    current_query = MappingEclPart.objects.get(id=record_id)
+
+    client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
+    result = {
+        "concepts": {},
+        "numResults": 0
+    }
+    try:
+        client.login(
+            username=settings.TERMINOLOGIE_USERNAME,
+            password=settings.TERMINOLOGIE_PASSWORD
+        )
+
+        expansion_result = client.expand_snomed_ecl_valueset(ecl_query=query)
+
+        for code in expansion_result:
+            code_details = client.lookup_code(system=code["system"], code=code["code"])
+            if "parameter" in code_details:
+                code.update(client.params_to_dict(code_details["parameter"]))
+
+            result["concepts"][code["code"]] = client.expanded_data_to_snowstorm_mapping(
+                expanded_data=code
+            )
+    except TerminologieRequestError as e:
+        current_query.failed = True
+        current_query.error = str(e)
+        result = {}
+
+    else:
+        result["numResults"] = len(result["concepts"].keys())
+
+        current_query.failed = False
+        current_query.error = None
+
+    current_query.finished = True
+    current_query.result = result
+    current_query.save()
+    return current_query
+
+
+@shared_task
 def UpdateECL1Task(record_id: int, query: str) -> str:
     """Update ECL Task by performing ECL query.
 
@@ -40,9 +94,6 @@ def UpdateECL1Task(record_id: int, query: str) -> str:
     Returns:
         string representation of query result.
     """
-    max_tries = 10
-    sleep_time = 10
-    tries = 0
 
     # Fetch query object
     currentQuery = MappingEclPart.objects.get(id=record_id)

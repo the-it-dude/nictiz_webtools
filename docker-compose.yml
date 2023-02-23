@@ -24,7 +24,10 @@ services:
       dockerfile: docker/dev/python/Dockerfile
     environment:
     - PYTHONUNBUFFERED=1
+    - PYTHONBREAKPOINT=${PYTHONBREAKPOINT}
     - PYTHONPATH=/webserver
+    - TERMINOLOGIE_USERNAME=${TERMINOLOGIE_USERNAME}
+    - TERMINOLOGIE_PASSWORD=${TERMINOLOGIE_PASSWORD}
     volumes:
       - ./:/webserver
     ports:

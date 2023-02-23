@@ -2,3 +2,6 @@
 
 django-debug-toolbar
 factory-boy
+flake8
+black
+isort
