@@ -31,7 +31,7 @@ class MappingTargetsViewSetTestCase(TestCase):
         result = self.client.get(path=f"/mapping/api/1.0/mappings/{self.project.pk}/")
         self.assertEqual(result.status_code, 403)
 
-    @mock.patch("mapping.views.mappings.UpdateECL1Task")
+    @mock.patch("mapping.views.mappings.update_ecl_task")
     def test_create_for_project_type_4(self, update_ecl1_task_mock):
         data = {
             "targets": {
