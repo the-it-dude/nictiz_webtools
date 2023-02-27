@@ -3,7 +3,6 @@ import sys
 import time
 import uuid
 
-# import environ
 import requests
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist

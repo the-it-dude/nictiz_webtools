@@ -26,7 +26,6 @@ class MappingTargetsViewSetTestCase(TestCase):
         self.project.access.add(self.user)
 
     def test_create_auth_required(self):
-        data = {}
         self.client.logout()
         result = self.client.get(path=f"/mapping/api/1.0/mappings/{self.project.pk}/")
         self.assertEqual(result.status_code, 403)
