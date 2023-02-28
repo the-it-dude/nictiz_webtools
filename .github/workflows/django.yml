@@ -50,7 +50,7 @@ jobs:
       -
         name: Test
         run: |
-          docker run --rm ${{ env.TEST_TAG }} python manage.py test --settings=app.settings.test
+          docker run -e DJANGO_SECRET=${{ DJANGO_SECRET }} -e POSTGRES_DB=${{ POSATGRES_DB }} -e POSTGRES_USER=${{ POSTGRES_USER }} -e POSTGRES_PASS=${{ POSTGRES_PASS }} -e mapping_api_secret=${{ mapping_api_secret}}  -e nts_client=${{ nts_client }} -e nts_apikey=${{ nts_apikey }} --rm ${{ env.TEST_TAG }} python manage.py test --settings=app.settings.test
       -
         name: Build and push
         uses: docker/build-push-action@v4
