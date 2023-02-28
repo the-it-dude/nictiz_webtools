@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "main"
+      - "cleanup_1"
 
 env:
   TEST_TAG: nictiz/nictiz_webtools:test
