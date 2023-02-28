@@ -7,8 +7,8 @@ on:
       - "cleanup_1"
 
 env:
-  TEST_TAG: darth/nictiz_webtools:test
-  LATEST_TAG: darth/nictiz_webtools:latest
+  TEST_TAG: ${{ secrets.DOCKERHUB_REGISTRY }}/darth/nictiz_webtools:test
+  LATEST_TAG: ${{ secrets.DOCKERHUB_REGISTRY }}/darth/nictiz_webtools:latest
   DJANGO_SECRET: "thetest"
   DEBUG: True
   POSTGRES_DB: ""
