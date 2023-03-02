@@ -85,10 +85,10 @@ MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-REST_FRAMEWORK = {                          
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated",],                          
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated",],
     "DEFAULT_PARSER_CLASSES":["rest_framework.parsers.JSONParser",],
-    "DEFAULT_AUTHENTICATION_CLASSES": 
+    "DEFAULT_AUTHENTICATION_CLASSES":
         [
             "rest_framework.authentication.SessionAuthentication",
             "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -116,9 +116,9 @@ CORS_ORIGIN_WHITELIST = [
 CORS_SUPPORTS_CREDENTIALS = True
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE=None
-CSRF_COOKIE_DOMAIN = '.test-nictiz.nl'
-SESSION_COOKIE_DOMAIN = '.test-nictiz.nl'
-ALLOWED_HOSTS = ['.test-nictiz.nl']
+CSRF_COOKIE_DOMAIN = env.str("CSRF_COOKIE_DOMAIN", default=".test-nictiz.nl")
+SESSION_COOKIE_DOMAIN = env.str("SESSION_COOKIE_DOMAIN", default=".test-nictiz.nl")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=['.test-nictiz.nl'])
 
 ROOT_URLCONF = 'app.urls'
 
@@ -203,9 +203,9 @@ LOGGING = {
 MAPPING_TOOL_URL = 'https://termservice.test-nictiz.nl/node/'
 SNOWSTORM_URL = "https://snowstorm.test-nictiz.nl"
 
-TERMINOLOGIE_URL = "https://terminologieserver.nl"
-TERMINOLOGIE_USERNAME = None
-TERMINOLOGIE_PASSWORD = None
+TERMINOLOGIE_URL = env.str("TERMINOLOGIE_URL", "https://terminologieserver.nl")
+TERMINOLOGIE_USERNAME = env.str("TERMINOLOGIE_USERNAME", "")
+TERMINOLOGIE_PASSWORD = env.str("TERMINOLOGIE_PASSWORD", "")
 
 MAPPING_API_SECRET = str(env("mapping_api_secret"))
 
