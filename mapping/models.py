@@ -180,7 +180,7 @@ class MappingTaskStatus(models.Model):
 
     def __str__(self):
         return (
-            f"{self.idD} "
+            f"{self.id} "
             f"Status ID: {self.status_id} "
             f"@ project {self.project_id}: {self.status_title}"
         )
