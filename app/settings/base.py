@@ -200,8 +200,8 @@ LOGGING = {
     },
 }
 
-MAPPING_TOOL_URL = 'https://termservice.test-nictiz.nl/node/'
-SNOWSTORM_URL = "https://snowstorm.test-nictiz.nl"
+MAPPING_TOOL_URL = env.str("MAPPING_TOOL_URL", default='https://termservice.test-nictiz.nl/node/')
+SNOWSTORM_URL = env.str("SNOWSTORM_URL", default="https://snowstorm.test-nictiz.nl")
 
 TERMINOLOGIE_URL = env.str("TERMINOLOGIE_URL", "https://terminologieserver.nl")
 TERMINOLOGIE_USERNAME = env.str("TERMINOLOGIE_USERNAME", "")
