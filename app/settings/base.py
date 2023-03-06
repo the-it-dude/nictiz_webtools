@@ -106,13 +106,13 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-CORS_ORIGIN_WHITELIST = [
+CORS_ORIGIN_WHITELIST = env.list("CORS_ORIGIN_WHITELIST", default=[
     "http://localhost:9123",
     "http://127.0.0.1:9123",
     "http://62.138.184.153:9123",
-    "https://flower.test-nictiz.nl"
-]
-# CORS_ORIGIN_ALLOW_ALL = True
+    "https://flower.test-nictiz.nl",
+])
+CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", default=False)
 CORS_SUPPORTS_CREDENTIALS = True
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE=None
