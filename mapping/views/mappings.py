@@ -4,6 +4,7 @@ import time
 import uuid
 
 import requests
+from celery.execute import send_task
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
@@ -15,7 +16,6 @@ from rest_framework import permissions
 from mapping.tasks import (
     createRulesFromEcl,
     createRulesForAllTasks,
-    send_task,
     update_ecl_task
 )
 from mapping.models import (

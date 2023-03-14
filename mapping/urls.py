@@ -38,7 +38,6 @@ router_1_0.register(r'snomed_failback_import', views.SnomedFailbackImport, basen
 
 router_1_0.register(r'codesystems', views.Codesystems, basename="Mapping Codesystems")
 router_1_0.register(r'projects', views.Projects, basename="Mapping Projects")
-router_1_0.register(r'tasklist', views.Tasklist, basename="Mapping tasks")
 router_1_0.register(r'taskdetails', views.TaskDetails, basename="Mapping tasks")
 router_1_0.register(r'events_and_comments', views.EventsAndComments, basename="Mapping events and comments")
 router_1_0.register(r'mappings', views.MappingTargets, basename="Mappings")
@@ -71,9 +70,12 @@ router_1_0.register(r'export_source_data', views.ExportEclSourceData, basename="
 
 urlpatterns = [
     # DRF router
+
+    path(r'api/1.0/tasklist/<int:project_pk>/', views.ProjectTasklist.as_view(), name="project_tasklist"),
     path(r'api/1.0/', include(router_1_0.urls)),
 
     # The last remnants of the old static interface
     url(r'updatecodesystems/', views.api_UpdateCodesystems_post.as_view(), name='updatecodesystems'),
     url(r'', views.vue_MappingIndex.as_view(), name='index'),
+    # url(r'', views.Tasklist.as_view(), name='index'),
 ]

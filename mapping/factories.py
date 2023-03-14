@@ -1,8 +1,14 @@
 import factory
 
 from mapping.enums import ProjectTypes, RuleCorrelations
-from mapping.models import MappingCodesystem, MappingCodesystemComponent, MappingEclPart, MappingProject, MappingTask
-
+from mapping.models import (
+    MappingCodesystem,
+    MappingCodesystemComponent,
+    MappingEclPart,
+    MappingProject,
+    MappingTask,
+    MappingTaskStatus,
+)
 
 
 class MappingCodesystemFactory(factory.django.DjangoModelFactory):
@@ -36,6 +42,18 @@ class MappingProjectFactory(factory.django.DjangoModelFactory):
     active = True
 
 
+class MappingTaskStatusFactory(factory.django.DjangoModelFactory):
+    """Mapping Task Status Factory."""
+
+    class Meta:
+        model = MappingTaskStatus
+
+    project_id = factory.SubFactory(MappingProjectFactory)
+    status_title = factory.Sequence(lambda n: f"Status #{n}")
+    status_id = factory.Sequence(lambda n: n)
+    status_next = factory.Sequence(lambda n: n + 1)
+
+
 class MappingTaskFactory(factory.django.DjangoModelFactory):
     """Mapping Task Factory."""
 
@@ -45,6 +63,7 @@ class MappingTaskFactory(factory.django.DjangoModelFactory):
     project_id = factory.SubFactory(MappingProjectFactory)
     category = factory.Sequence(lambda n: f"Category #{n}")
     source_component  = factory.SubFactory(MappingCodesystemComponentFactory)
+    status = factory.SubFactory(MappingTaskStatusFactory, project_id=factory.SelfAttribute("..project_id"))
 
 
 class MappingECLPartFactory(factory.django.DjangoModelFactory):

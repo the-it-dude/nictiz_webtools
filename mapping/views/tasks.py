@@ -1,42 +1,51 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from django.template.defaultfilters import linebreaksbr
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
-from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import User
-from django.urls import reverse
-from django.db.models import Q
-from datetime import datetime
-from celery.task.control import inspect, revoke
-from pandas import read_excel, read_csv
-import xmltodict
-import sys, os
-import environ
-import time
-import random
 import json
-import urllib.request
-import re
-import natsort
+import logging
 
+from django.conf import settings
+from django.contrib.auth.models import User, Group
+
+from rest_framework.generics import ListAPIView
 from rest_framework import viewsets
-from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from mapping.tasks import *
-from mapping.models import *
+# from mapping.tasks import *
+# from mapping.models import
+from mapping.models import (
+    MappingEclPartExclusion,
+    MappingEventLog,
+    MappingComment,
+    MappingCodesystem,
+    MappingCodesystemComponent,
+    MappingProject,
+    MappingRule,
+    MappingTask,
+    MappingTaskStatus,
+)
+from mapping.serializers import MappingTaskSerializer
+
+
+logger = logging.getLogger(__name__)
+
 
 class Permission_MappingProject_Access(permissions.BasePermission):
     """
     Global permission check rights to use the RC Audit functionality.
     """
     def has_permission(self, request, view):
-        if 'mapping | access' in request.user.groups.values_list('name', flat=True):
-            return True
+        try:
+            request.user.groups.get(name="mapping | access")
+        except Group.DoesNotExist:
+            pass
+        else:
+            if "project_pk" in view.kwargs:
+                try:
+                    request.user.access_users.get(pk=view.kwargs["project_pk"])
+                except MappingProject.DoesNotExist:
+                    pass
+                else:
+                    return True
+
 
 class Permission_CreateMappingTasks(permissions.BasePermission):
     """
@@ -45,6 +54,7 @@ class Permission_CreateMappingTasks(permissions.BasePermission):
     def has_permission(self, request, view):
         if 'mapping | create tasks' in request.user.groups.values_list('name', flat=True):
             return True
+
 
 class CreateTasks(viewsets.ViewSet):
     permission_classes = [Permission_CreateMappingTasks]
@@ -166,58 +176,27 @@ class CreateTasks(viewsets.ViewSet):
         else:
             return Response('Error: Geen toegang')
 
-class Tasklist(viewsets.ViewSet):
+
+class ProjectTasklist(ListAPIView):
     permission_classes = [Permission_MappingProject_Access]
+    serializer_class = MappingTaskSerializer
 
-    def retrieve(self, request, pk=None):
-        print(f"[tasks/Tasklist retrieve] requested by {request.user} - {pk}")
+    def get_queryset(self):
+        pk = self.kwargs["project_pk"]
+        logger.info(f"[tasks/Tasklist retrieve] requested by {self.request.user} - {pk}")
 
-        # List all tasks
-        # TODO filter on which projects the user has access to
-         # Get data
-        current_user = User.objects.get(id=request.user.id)
-        project = MappingProject.objects.get(id=pk, access__username=current_user)
-        data = MappingTask.objects.select_related('status','user','source_component','source_component__codesystem_id').filter(project_id=project).order_by('id')
+        tasks = MappingTask \
+            .objects \
+            .select_related('status','user','source_component','source_component__codesystem_id') \
+            .filter(project_id=pk)
 
-        task_list = []
-        for task in data:
-            try:
-                user_id = task.user.id
-                user_name = task.user.username
-            except:
-                user_id = 'Niet toegewezen'
-                user_name = 'Niet toegewezen'
-            task_list.append({
-                'id'    :   task.id,
-                'user' : {
-                    'id' : user_id,
-                    'name' : user_name,
-                },
-                'component' : {
-                    'id'  :   task.source_component.component_id,
-                    'title' :   task.source_component.component_title,
-                    'codesystem' : {
-                        'id' : task.source_component.codesystem_id.id,
-                        'version' : task.source_component.codesystem_id.codesystem_version,
-                        'title' : task.source_component.codesystem_id.codesystem_title,
-                    }
-                },
-                'status'  :   {
-                    'id' : task.status.id,
-                    'title' : task.status.status_title
-                },
-                'category' : task.category,
-            })
-
-        # Sort alphabetically for these specific project ids. All others: sort on component id.
-        sort_alphab = [3,13]
-        if project.id in sort_alphab:
-            task_list = natsort.natsorted(task_list, key=lambda k: k['component']['title'])
+        if pk in settings.PROJECTS_SORTED_ALPHABETICALLY:
+            tasks = tasks.order_by('source_component__component_title')
         else:
-            task_list = natsort.natsorted(task_list, key=lambda k: k['component']['id'])
+            tasks = tasks.order_by('source_component__component_id')
 
+        return tasks
 
-        return Response(task_list)
 
 class TaskDetails(viewsets.ViewSet):
     permission_classes = [Permission_MappingProject_Access]
@@ -255,13 +234,13 @@ class TaskDetails(viewsets.ViewSet):
                         'title' : task.source_component.codesystem_id.codesystem_title,
                     },
                     'extra' : task.source_component.component_extra_dict,
-                    },
-                    'status'  :   {
-                        'id' : task.status.id,
-                        'title' : task.status.status_title,
-                        'description' : task.status.status_description,
-                    },
-                }
+                },
+                'status'  :   {
+                    'id' : task.status.id,
+                    'title' : task.status.status_title,
+                    'description' : task.status.status_description,
+                },
+            }
 
             if task.project_id.project_type == '4':
                 try:
@@ -289,12 +268,13 @@ class TaskDetails(viewsets.ViewSet):
 
             return Response(output)
 
+
 class RelatedTasks(viewsets.ViewSet):
     """ Takes component ID as PK, returns all tasks with the same component as source_component """
 
     permission_classes = [Permission_MappingProject_Access]
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk):
         print(f"[tasks/RelatedTasks retrieve] requested by {request.user} - {pk}")
 
         # Get data

@@ -21,6 +21,7 @@ environ.Env.read_env(env.str('ENV_PATH', '.env'))
 
 logger = get_task_logger(__name__)
 
+
 @shared_task
 def createRulesFromEcl(taskid):
     print("Task createRulesFromEcl received by celery")

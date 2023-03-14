@@ -43,6 +43,8 @@ class MappingCodesystem(models.Model):
         max_length=500, default=None, null=True, blank=True
     )
 
+    objects = models.Manager()
+
     def __str__(self):
         return f"{self.id} {self.codesystem_title} {self.codesystem_version}"
 
@@ -72,6 +74,8 @@ class MappingCodesystemComponent(models.Model):
     component_extra_7 = models.CharField(
         max_length=500, default=None, null=True, blank=True
     )
+
+    objects = models.Manager()
 
     class Meta:
         indexes = [
@@ -159,8 +163,10 @@ class MappingProject(models.Model):
 
     active = models.BooleanField(default=True)
 
+    objects = models.Manager()
+
     def __str__(self):
-        return str(self.id) + " " + self.title
+        return str(self.id) + " " + str(self.title)
 
 
 class MappingTaskStatus(models.Model):
@@ -177,6 +183,8 @@ class MappingTaskStatus(models.Model):
         default=None, blank=True, null=True
     )  # Uniek ID van codesystem waar naartoe in deze taak gemapt moet worden
     status_next = models.CharField(max_length=50)  # ID van gebruiker
+
+    objects = models.Manager()
 
     def __str__(self):
         return (
@@ -225,6 +233,8 @@ class MappingTask(models.Model):
     )
     task_created = models.DateTimeField(default=timezone.now)
 
+    objects = models.Manager()
+
     def __str__(self):
         return "Taak ID {}: {} * source component {}".format(
             self.id,
@@ -242,6 +252,8 @@ class MappingComment(models.Model):
     # comment_user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment_user = models.ForeignKey(User, on_delete=models.PROTECT)
     comment_created = models.DateTimeField(default=timezone.now)
+
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.id} {self.comment_task.id} {self.comment_user.username}"
@@ -279,6 +291,8 @@ class MappingRule(models.Model):
 
     active = models.BooleanField(max_length=50, null=True)  # Actief of deprecated rule
 
+    objects = models.Manager()
+
 
 class MappingEclPart(models.Model):
     """Mapping ECL Part.
@@ -314,6 +328,8 @@ class MappingEclPart(models.Model):
     # Query or export failed?
     failed = models.BooleanField(default=False)
 
+    objects = models.Manager()
+
 
 class MappingEclPartExclusion(models.Model):
     """Mapping ECL Part Exclusions.
@@ -328,6 +344,8 @@ class MappingEclPartExclusion(models.Model):
     components = models.JSONField(
         encoder=DjangoJSONEncoder, default=list, blank=True, null=True
     )
+
+    objects = models.Manager()
 
 
 class MappingEventLog(models.Model):
@@ -366,6 +384,8 @@ class MappingEventLog(models.Model):
         )
     )
     event_time = models.DateTimeField(default=timezone.now)
+
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.id} Task ID: {self.task.id} Actie: {self.action_description}"

@@ -37,17 +37,26 @@ INTERNAL_IPS = [
     '0.0.0.0',
     'localhost',
 ]
-
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'NAME': 'tickets',
-       'USER': 'tickets',
-       'PASSWORD': 'tickets',
-       'HOST': 'postgres',
-       'PORT': '5432',
+       'NAME': env('POSTGRES_DB'),
+       'USER': env('POSTGRES_USER'),
+       'PASSWORD': env('POSTGRES_PASS'),
+       'HOST': env('POSTGRES_HOST', default='postgres'),
+       'PORT': env('POSTGRES_PORT', default='5432'),
    }
 }
+# DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#        'NAME': 'tickets',
+#        'USER': 'tickets',
+#        'PASSWORD': 'localhost',
+#        'HOST': 'postgres',
+#        'PORT': '5432',
+#    }
+# }
 
 
 ## Logging configuration

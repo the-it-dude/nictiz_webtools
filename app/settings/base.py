@@ -212,3 +212,6 @@ MAPPING_API_SECRET = str(env("mapping_api_secret"))
 # TODO: replace with TERMINOLOGIE_*
 NTS_CLIENT_ID = env("nts_client")
 NTS_APIKEY = env("nts_apikey")
+
+
+PROJECTS_SORTED_ALPHABETICALLY = [3, 13]
