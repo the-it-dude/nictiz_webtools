@@ -47,6 +47,15 @@ class TaskCreateForm(forms.Form):
     comment = forms.CharField(label='comment', required=False, widget=forms.Textarea(attrs={"rows":3, "cols":42}))
     tasks = forms.CharField(label='tasks', required=False, widget=forms.Textarea(attrs={"rows":3, "cols":42}))
 
+
+class TaskUserForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        project = kwargs.pop("project")
+        super().__init__(*args, **kwargs)
+        self.fields["task"] = forms.ModelChoiceField(queryset=project.tasks.all())
+        self.fields["user"] = forms.ModelChoiceField(queryset=project.access.all())
+
+
 class PostCommentForm(forms.Form):
     project_id          = forms.CharField(widget=forms.HiddenInput(), label='project_id', max_length=100)
     task_id             = forms.CharField(widget=forms.HiddenInput(), label='task_id', max_length=100)

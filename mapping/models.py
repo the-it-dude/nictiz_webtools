@@ -197,7 +197,7 @@ class MappingTaskStatus(models.Model):
 class MappingTask(models.Model):
     """Mapping tasks."""
 
-    project_id = models.ForeignKey(MappingProject, on_delete=models.PROTECT)
+    project_id = models.ForeignKey(MappingProject, on_delete=models.PROTECT, related_name="tasks")
     category = models.CharField(max_length=500)
     # Uniek ID in codesystem = MappingCodesystemComponent:id
     source_component = (

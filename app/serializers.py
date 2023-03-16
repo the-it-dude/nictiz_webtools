@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["value", "text", "name", "username"]
 
-    value = serializers.CharField(source="id", read_only=True)
+    value = serializers.IntegerField(source="id", read_only=True)
     text = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField(method_name="get_text")
 

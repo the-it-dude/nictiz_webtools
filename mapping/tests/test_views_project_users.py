@@ -39,6 +39,7 @@ class MappingProjectUsersViewTestCase(APITestCase):
         user_has_access_to_task = UserFactory()
         user_has_access_to_task.groups.add(self.project_access_group)
         self.task.user = user_has_access_to_task
+        self.task.save()
         user_has_no_access_to_tasks = UserFactory()
         user_has_access_to_other_project = UserFactory()
         user_has_access_to_other_project.groups.add(self.project_access_group)
@@ -55,15 +56,15 @@ class MappingProjectUsersViewTestCase(APITestCase):
     def test_output(self):
         result = self.client.get(self.project_url)
 
-        self.assertEqual(result.data, [
-            {'value': 1, 'text': self.user.username, 'name': " "}
+        self.assertEqual(result.json(), [
+            {'value': 1, 'text': self.user.get_full_name(), 'name': self.user.get_full_name(), "username": self.user.username}
         ])
 
     def test_create_no_group_access(self):
         user = UserFactory()
 
         self.client.force_login(user)
-        result = self.client.post(self.url, {"task": self.task.pk}, format="json")
+        result = self.client.post(self.project_url, {"task": self.task.pk}, format="json")
 
         self.assertEqual(result.status_code, 403)
 
@@ -72,13 +73,29 @@ class MappingProjectUsersViewTestCase(APITestCase):
         user.groups.add(self.project_access_group)
 
         self.client.force_login(user)
-        result = self.client.post(self.url, {"task": self.task.pk}, format="json")
+        result = self.client.post(self.project_url, {"task": self.task.pk}, format="json")
 
-        self.assertEqual(result.status_code, 401)
+        self.assertEqual(result.status_code, 403)
+
+    def test_create_incorrect_data(self):
+        """Check that user can not be assigned to task without having access to project."""
+        user = UserFactory()
+        result = self.client.post(self.project_url, {"task": self.task.pk, "user": user.pk}, format="json")
+
+        self.assertEqual(result.status_code, 400)
+        self.assertEqual(
+            result.json()["errors"],
+            {
+                "user": [
+                    'Select a valid choice. That choice is not one of the available choices.'
+                ]
+            }
+        )
 
     def test_create_success(self):
         user = UserFactory()
-        result = self.client.post(self.url, {"task": self.task.pk, "user": user.pk}, format="json")
+        self.project.access.add(user)
+        result = self.client.post(self.project_url, {"task": self.task.pk, "user": user.pk}, format="json")
 
         self.assertEqual(result.status_code, 200)
 

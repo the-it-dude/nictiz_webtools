@@ -1,6 +1,7 @@
 -r base.txt
 
 django-debug-toolbar
+faker
 factory-boy
 flake8
 black

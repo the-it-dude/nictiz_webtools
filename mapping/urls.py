@@ -54,7 +54,7 @@ router_1_0.register(r'mapping_dialog', views.MappingDialog, basename="Mappings")
 router_1_0.register(r'componentsearch', views.MappingTargetSearch, basename="Component search endpoint")
 router_1_0.register(r'search_by_component', views.RuleSearchByComponent, basename="Search by mapping rule components")
 router_1_0.register(r'statuses', views.MappingStatuses, basename="Mapping statuses for selected project")
-router_1_0.register(r'users', views.MappingUsers, basename="Mapping users for selected project")
+# router_1_0.register(r'users', views.MappingUsers, basename="Mapping users for selected project")
 router_1_0.register(r'comments', views.MappingPostComment, basename="Mapping comments for selected task")
 
 router_1_0.register(r'automap', views.MappingAutoMapNTS, basename="Automap using the NTS")
@@ -71,7 +71,7 @@ urlpatterns = [
 
     path(r'api/1.0/tasklist/<int:project_pk>/', views.ProjectTasklist.as_view(), name="project_tasklist"),
     path(r'api/1.0/related_tasks/<int:task_pk>/', views.RelatedTasks.as_view(), name="related_tasks"),
-    # path(r'api/1.0/users/<int:project_pk>/', views.MappingProjectUsers.as_view(), name="project_users"),
+    path(r'api/1.0/users/<int:project_pk>/', views.MappingProjectUsers.as_view(), name="project_users"),
     path(r'api/1.0/', include(router_1_0.urls)),
 
     # The last remnants of the old static interface
