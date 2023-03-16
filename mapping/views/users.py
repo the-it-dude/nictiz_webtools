@@ -10,8 +10,6 @@ from app.serializers import UserSerializer
 
 from mapping.enums import MappingGroups
 from mapping.forms import TaskUserForm
-# from mapping.tasks import *
-# from mapping.models import *
 from mapping.models import MappingProject, MappingCodesystemComponent, MappingRule, MappingEventLog
 from mapping.permissions import MappingProjectAccessPermission
 
@@ -30,7 +28,7 @@ class MappingProjectUsers(ListCreateAPIView):
             groups__name=MappingGroups.project_access
         ).filter(
             Q(tasks__project_id=self.kwargs['project_pk']) | Q(access_users__pk=self.kwargs['project_pk'])
-        )
+        ).distinct()
 
     def create(self, request, project_pk):
         logger.info(f"[users/MappingUsers create] requested by {request.user} - data: {str(request.data)[:500]}")
