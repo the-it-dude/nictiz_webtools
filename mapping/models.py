@@ -225,7 +225,8 @@ class MappingTask(models.Model):
     )
     # ID van gebruiker
     user = models.ForeignKey(
-        User, on_delete=models.PROTECT, default=None, null=True, blank=True
+        User, on_delete=models.PROTECT, default=None, null=True, blank=True,
+        related_name="tasks"
     )
     # ID van status
     status = models.ForeignKey(

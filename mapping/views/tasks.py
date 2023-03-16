@@ -22,29 +22,12 @@ from mapping.models import (
     MappingTask,
     MappingTaskStatus,
 )
+from mapping.permissions import MappingProjectAccessPermission
 from mapping.serializers import MappingTaskSerializer
 
 
 logger = logging.getLogger(__name__)
 
-
-class Permission_MappingProject_Access(permissions.BasePermission):
-    """
-    Global permission check rights to use the RC Audit functionality.
-    """
-    def has_permission(self, request, view):
-        try:
-            request.user.groups.get(name="mapping | access")
-        except Group.DoesNotExist:
-            pass
-        else:
-            if "project_pk" in view.kwargs:
-                try:
-                    request.user.access_users.get(pk=view.kwargs["project_pk"])
-                except MappingProject.DoesNotExist:
-                    pass
-                else:
-                    return True
 
 
 class Permission_CreateMappingTasks(permissions.BasePermission):
@@ -178,7 +161,7 @@ class CreateTasks(viewsets.ViewSet):
 
 
 class ProjectTasklist(ListAPIView):
-    permission_classes = [Permission_MappingProject_Access]
+    permission_classes = [MappingProjectAccessPermission]
     serializer_class = MappingTaskSerializer
 
     def get_queryset(self):
@@ -199,7 +182,7 @@ class ProjectTasklist(ListAPIView):
 
 
 class TaskDetails(viewsets.ViewSet):
-    permission_classes = [Permission_MappingProject_Access]
+    permission_classes = [MappingProjectAccessPermission]
 
     def retrieve(self, request, pk=None):
         print(f"[tasks/TaskDetails retrieve] requested by {request.user} - {pk}")
@@ -269,13 +252,14 @@ class TaskDetails(viewsets.ViewSet):
             return Response(output)
 
 
-class RelatedTasks(viewsets.ViewSet):
+class RelatedTasks(ListAPIView):
     """ Takes component ID as PK, returns all tasks with the same component as source_component """
+    serializer_class = MappingTaskSerializer
+    permission_classes = [MappingProjectAccessPermission]
 
-    permission_classes = [Permission_MappingProject_Access]
-
-    def retrieve(self, request, pk):
-        print(f"[tasks/RelatedTasks retrieve] requested by {request.user} - {pk}")
+    def get_queryset(self):
+        pk = self.kwargs["task_pk"]
+        logger.info(f"[tasks/RelatedTasks retrieve] requested by {self.request.user} - {pk}")
 
         # Get data
         task = MappingTask.objects.get(id=int(pk))
@@ -296,6 +280,7 @@ class RelatedTasks(viewsets.ViewSet):
         ) | MappingTask.objects.filter(
             source_component__id__in = target_list
         )
+        return tasks
         # print(tasks.values_list('id'))
 
         # Loop tasks and comments
@@ -338,7 +323,7 @@ class RelatedTasks(viewsets.ViewSet):
         return Response(output)
 
 class EventsAndComments(viewsets.ViewSet):
-    permission_classes = [Permission_MappingProject_Access]
+    permission_classes = [MappingProjectAccessPermission]
 
     def retrieve(self, request, pk=None):
         print(f"[tasks/EventsAndComments retrieve] requested by {request.user} - {pk}")

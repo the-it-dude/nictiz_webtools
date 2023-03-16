@@ -1,7 +1,14 @@
 import enum
 
+class MappingGroups:
+    """Collection of Mapping Group Names."""
+
+    project_access = "mapping | access"
+
 
 class ProjectTypes(enum.Enum):
+    """Mapping Project types."""
+
     one_to_many = '1'
     many_to_one = '2'
     many_to_many = '3'
@@ -19,6 +26,8 @@ class ProjectTypes(enum.Enum):
 
 
 class RuleCorrelations(enum.Enum):
+    """Rule Correlations."""
+
     broad_to_narrow = '447559001'
     exact_match = '447557004'
     narrow_to_broad = '447558009'

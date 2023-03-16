@@ -49,8 +49,6 @@ router_1_0.register(r'mapping_add_from_reverse', views.MappingTargetFromReverse,
 router_1_0.register(r'mapping_add_remote_exclusion', views.AddRemoteExclusion, basename="Add a remote exclusion")
 router_1_0.register(r'mapping_remove_reverse', views.RemoveMappingExclusions, basename="Remove an exclusion")
 router_1_0.register(r'mapping_reset_task', views.MappingTaskReset, basename="Reset a task")
-
-router_1_0.register(r'related_tasks', views.RelatedTasks, basename="Related tasks")
 router_1_0.register(r'reverse', views.MappingReverse, basename="Reverse mappings")
 router_1_0.register(r'mapping_dialog', views.MappingDialog, basename="Mappings")
 router_1_0.register(r'componentsearch', views.MappingTargetSearch, basename="Component search endpoint")
@@ -72,6 +70,8 @@ urlpatterns = [
     # DRF router
 
     path(r'api/1.0/tasklist/<int:project_pk>/', views.ProjectTasklist.as_view(), name="project_tasklist"),
+    path(r'api/1.0/related_tasks/<int:task_pk>/', views.RelatedTasks.as_view(), name="related_tasks"),
+    # path(r'api/1.0/users/<int:project_pk>/', views.MappingProjectUsers.as_view(), name="project_users"),
     path(r'api/1.0/', include(router_1_0.urls)),
 
     # The last remnants of the old static interface
