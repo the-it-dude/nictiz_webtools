@@ -45,6 +45,13 @@ def update_ecl_task(record_id: int, query: str) -> str:
 
     current_query = MappingEclPart.objects.get(id=record_id)
 
+    # Set query into "running" state.
+    current_query.result  = {}
+    current_query.finished = False
+    current_query.error = None
+    current_query.failed = False
+    current_query.save()
+
     client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
     result = {
         "concepts": {},

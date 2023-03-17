@@ -125,7 +125,7 @@ class TerminiologieClient:
             url=f"{self.uri}/fhir/ValueSet/$expand?url=http://snomed.info/sct?fhir_vs=ecl/{urllib.parse.quote_plus(ecl_query)}",
         )
         
-    def lookup_code(self, system: str, code: str) -> typing.Union[None, dict]:
+    def lookup_code(self, system: str, code: str) -> dict:
         """Retrieves the properties for a code within a CodeSystem.
         
         Args:
