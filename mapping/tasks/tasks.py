@@ -87,7 +87,7 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query.finished = True
     current_query.result = result
     current_query.save()
-    return current_query
+    return str(current_query)
 
 
 @shared_task
