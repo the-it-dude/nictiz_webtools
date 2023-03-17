@@ -1130,7 +1130,7 @@ class MappingTargets(viewsets.ViewSet):
                             # total time spent filtering
                             filter_time = 0
                             appending_time = 0
-                            max_results = 4000
+                            max_results = 20_000
                             max_export = 20_000
                             print(
                                 f"[mappings/MappingTargets retrieve] {request_uuid} | Query {i} - Fetching reason for exclusion for each excluded result. {query.result.get('numResults','-')} results found in current ECL query at {time.time()-requestStart}."
