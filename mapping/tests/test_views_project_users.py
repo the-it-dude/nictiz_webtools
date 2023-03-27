@@ -23,6 +23,22 @@ class MappingProjectUsersViewTestCase(APITestCase):
     def test_access_success(self):
         result = self.client.get(self.project_url)
         self.assertEqual(result.status_code, 200)
+        self.assertEqual(
+            result.data,
+            {
+                "count": 1,
+                "previous": None,
+                "next": None,
+                "results": [
+                    {
+                        "value": 1,
+                        "text": self.user.get_full_name(),
+                        "name": self.user.get_full_name(),
+                        "username": self.user.username,
+                    }
+                ],
+            },
+        )
 
     def test_access_no_group_access(self):
         self.user.groups.clear()
@@ -47,7 +63,7 @@ class MappingProjectUsersViewTestCase(APITestCase):
 
         result = self.client.get(self.project_url)
 
-        users_in_result = [user["value"] for user in result.data]
+        users_in_result = [user["value"] for user in result.data["results"]]
         self.assertIn(user_has_access_to_task.pk, users_in_result)
         self.assertIn(self.user.pk, users_in_result)
         self.assertNotIn(user_has_no_access_to_tasks.pk, users_in_result)
@@ -56,15 +72,25 @@ class MappingProjectUsersViewTestCase(APITestCase):
     def test_output(self):
         result = self.client.get(self.project_url)
 
-        self.assertEqual(result.json(), [
-            {'value': 1, 'text': self.user.get_full_name(), 'name': self.user.get_full_name(), "username": self.user.username}
-        ])
+        self.assertEqual(
+            result.json()["results"],
+            [
+                {
+                    "value": 1,
+                    "text": self.user.get_full_name(),
+                    "name": self.user.get_full_name(),
+                    "username": self.user.username,
+                }
+            ],
+        )
 
     def test_create_no_group_access(self):
         user = UserFactory()
 
         self.client.force_login(user)
-        result = self.client.post(self.project_url, {"task": self.task.pk}, format="json")
+        result = self.client.post(
+            self.project_url, {"task": self.task.pk}, format="json"
+        )
 
         self.assertEqual(result.status_code, 403)
 
@@ -73,29 +99,35 @@ class MappingProjectUsersViewTestCase(APITestCase):
         user.groups.add(self.project_access_group)
 
         self.client.force_login(user)
-        result = self.client.post(self.project_url, {"task": self.task.pk}, format="json")
+        result = self.client.post(
+            self.project_url, {"task": self.task.pk}, format="json"
+        )
 
         self.assertEqual(result.status_code, 403)
 
     def test_create_incorrect_data(self):
         """Check that user can not be assigned to task without having access to project."""
         user = UserFactory()
-        result = self.client.post(self.project_url, {"task": self.task.pk, "user": user.pk}, format="json")
+        result = self.client.post(
+            self.project_url, {"task": self.task.pk, "user": user.pk}, format="json"
+        )
 
         self.assertEqual(result.status_code, 400)
         self.assertEqual(
             result.json()["errors"],
             {
                 "user": [
-                    'Select a valid choice. That choice is not one of the available choices.'
+                    "Select a valid choice. That choice is not one of the available choices."
                 ]
-            }
+            },
         )
 
     def test_create_success(self):
         user = UserFactory()
         self.project.access.add(user)
-        result = self.client.post(self.project_url, {"task": self.task.pk, "user": user.pk}, format="json")
+        result = self.client.post(
+            self.project_url, {"task": self.task.pk, "user": user.pk}, format="json"
+        )
 
         self.assertEqual(result.status_code, 200)
 

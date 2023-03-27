@@ -8,6 +8,12 @@ from .projects import *
 from .tasks import *
 from .taskeditor import *
 from .mappings import *
+from .mapping_targets import (  # noqa: F401
+    MappingTaskECLPartsView,
+    MappingTaskExclusionsView,
+    MappingTaskTargetsView,
+    MappingECLConceptsView,
+)
 from .audits import *
 from .status import *
 from .users import *

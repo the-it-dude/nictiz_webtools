@@ -40,7 +40,9 @@ class ProjectTasklistTestCase(TestCase):
         result.render()
 
         self.assertEqual(result.status_code, 200)
-        self.assertEqual(result.data, [])
+        self.assertEqual(
+            result.data, {"count": 0, "previous": None, "next": None, "results": []}
+        )
 
     def test_tasks_sorted_by_component_id_by_default(self):
         task1 = MappingTaskFactory(
@@ -51,7 +53,7 @@ class ProjectTasklistTestCase(TestCase):
         task2 = MappingTaskFactory(
             project_id=self.project,
             source_component__component_title="a",
-            source_component__component_id=2
+            source_component__component_id=2,
         )
         view = ProjectTasklist.as_view()
 
@@ -59,12 +61,12 @@ class ProjectTasklistTestCase(TestCase):
         result.render()
 
         self.assertEqual(
-            result.data[0]["component"]["id"],
-            str(task1.source_component.component_id)
+            result.data["results"][0]["component"]["id"],
+            str(task1.source_component.component_id),
         )
         self.assertEqual(
-            result.data[1]["component"]["id"],
-            str(task2.source_component.component_id)
+            result.data["results"][1]["component"]["id"],
+            str(task2.source_component.component_id),
         )
 
     def test_tasks_sorted_alphabetically(self):
@@ -76,7 +78,7 @@ class ProjectTasklistTestCase(TestCase):
         task2 = MappingTaskFactory(
             project_id=self.project,
             source_component__component_title="a",
-            source_component__component_id=2
+            source_component__component_id=2,
         )
         view = ProjectTasklist.as_view()
 
@@ -84,13 +86,14 @@ class ProjectTasklistTestCase(TestCase):
             result = view(self.request, project_pk=self.project.pk)
         result.render()
 
+        self.assertEqual(result.data["count"], 2)
         self.assertEqual(
-            result.data[0]["component"]["id"],
-            str(task2.source_component.component_id)
+            result.data["results"][0]["component"]["id"],
+            str(task2.source_component.component_id),
         )
         self.assertEqual(
-            result.data[1]["component"]["id"],
-            str(task1.source_component.component_id)
+            result.data["results"][1]["component"]["id"],
+            str(task1.source_component.component_id),
         )
 
     def test_tasks_data_confirmed(self):
@@ -104,28 +107,35 @@ class ProjectTasklistTestCase(TestCase):
         result = view(self.request, project_pk=self.project.pk)
         result.render()
 
-        self.assertEqual(len(result.data), 1)
+        self.assertEqual(result.data["count"], 1)
         self.assertEqual(
-            json.loads(json.dumps(result.data[0])),
-            json.loads(json.dumps({
-                "id": task1.id,
-                "user": {
-                    "id": "Niet toegewezen",
-                    "username": "Niet toegewezen",
-                    "name": "Niet toegewezen"
-                },
-                "component": {
-                    "id": str(task1.source_component.component_id),
-                    "title": task1.source_component.component_title,
-                    "codesystem": {
-                        "id": task1.source_component.codesystem_id.id,
-                        "version": str(task1.source_component.codesystem_id.codesystem_version),
-                        "title": task1.source_component.codesystem_id.codesystem_title
+            json.loads(json.dumps(result.data["results"][0])),
+            json.loads(
+                json.dumps(
+                    {
+                        "id": task1.id,
+                        "user": {
+                            "id": "Niet toegewezen",
+                            "username": "Niet toegewezen",
+                            "name": "Niet toegewezen",
+                        },
+                        "component": {
+                            "id": str(task1.source_component.component_id),
+                            "title": task1.source_component.component_title,
+                            "extra": None,
+                            "codesystem": {
+                                "id": task1.source_component.codesystem_id.id,
+                                "version": str(
+                                    task1.source_component.codesystem_id.codesystem_version
+                                ),
+                                "title": task1.source_component.codesystem_id.codesystem_title,
+                            },
+                        },
+                        "status": {
+                            "id": task1.status.id,
+                            "title": task1.status.status_title,
+                        },
                     }
-                },
-                "status": {
-                    "id": task1.status.id,
-                    "title": task1.status.status_title,
-                }
-            }))
+                )
+            ),
         )

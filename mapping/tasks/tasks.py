@@ -52,6 +52,9 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query.failed = False
     current_query.save()
 
+    # Remove all concepts from DB.
+    current_query.concepts.delete()
+
     client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
     result = {
         "concepts": {},
@@ -87,6 +90,17 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query.finished = True
     current_query.result = result
     current_query.save()
+    if not current_query.failed:
+        # Create results in db.
+
+        concepts = []
+        for concept in result["concepts"].values():
+            concepts.append(MappingECLConcept.from_part_result(
+                ecl_part=current_query,
+                result=concept
+            ))
+        MappingECLConcept.objects.bulk_create(concepts)
+
     return str(current_query)
 
 
@@ -139,7 +153,7 @@ def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Op
         search_after (Optional[str]): Optional string required to perforn extended query.
         attempt (Optional[int]): Attempt numner, used to limit number of queries performed.
         items (Optional[list]): List of resulting items in subsequent requests are needed.
-    
+
     Returns:
         Updated Mapping ECL Part instance.
     """
@@ -171,7 +185,7 @@ def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Op
                 f"Try [{attempt}/{MAX_REQUEST_RETRIES}]. "
             )
             error = f"Na {attempt} pogingen opgegeven. Status code: {response.status_code}. Response body: {response.text}."
-        
+
     if status_code != 200:
         if status_code < 400 and attempt <= MAX_REQUEST_RETRIES:
             logger.error(
@@ -185,7 +199,7 @@ def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Op
                 attempt=attempt + 1
             )
         return False, error
-    
+
     response_data = response.json()
     items = items + response_data["items"]
     if len(items) != response_data["total"]:

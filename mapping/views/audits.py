@@ -1,29 +1,6 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from django.template.defaultfilters import linebreaksbr
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
-from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import User
-from django.urls import reverse
-from django.db.models import Q
-from datetime import datetime
-from celery.task.control import inspect, revoke
-from pandas import read_excel, read_csv
-import xmltodict
-import sys, os
-import environ
-import time
-import random
-import json
-import urllib.request
-import re
-import natsort
+from celery.task.control import inspect
 
 from rest_framework import viewsets
-from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import permissions
 
@@ -203,7 +180,7 @@ class MappingAuditStatus(viewsets.ViewSet):
         print(f"[audits/MappingAuditStatus list] requested by {request.user}")
         i = inspect()
         active = i.active()
-        info = []
+        processes = []
         if not active:
             pk = 'error - celery down?'
         else:

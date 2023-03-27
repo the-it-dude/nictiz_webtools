@@ -2,7 +2,6 @@ version: '3'
 volumes:
   pgdata:
   pgadmin:
-  postgres_backup:
 services:
   # Postgres DB for Django
   postgres:
@@ -13,7 +12,7 @@ services:
       POSTGRES_PASS: ${POSTGRES_PASS}
     volumes:
       # - pgdata:/var/lib/postgresql/data
-      - postgres_backup:/backup
+      - ./postgres_backup:/back
 #    ports:
 #      - 5432:5432
   # Python for Django server
@@ -26,8 +25,16 @@ services:
     - PYTHONUNBUFFERED=1
     - PYTHONBREAKPOINT=${PYTHONBREAKPOINT}
     - PYTHONPATH=/webserver
+    - DJANGO_SECRET=${DJANGO_SECRET}
+    - POSTGRES_USER=${POSTGRES_USER}
+    - POSTGRES_PASS=${POSTRES_PASS}
+    - POSTGRES_DB=${POSTGRES_DB}
+    - POSTGRES_HOST=postgres
     - TERMINOLOGIE_USERNAME=${TERMINOLOGIE_USERNAME}
     - TERMINOLOGIE_PASSWORD=${TERMINOLOGIE_PASSWORD}
+    - mapping_api_secret=${mapping_api_secret}
+    - nts_client=${nts_client}
+    - nts_apikey=${nts_apikey}
     volumes:
       - ./:/webserver
     ports:

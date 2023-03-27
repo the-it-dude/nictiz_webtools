@@ -78,13 +78,16 @@ LOGGING = {
         },
     },
     'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['rq_console'],
+        },
         "rq.worker": {
             "handlers": ["rq_console",],
             "level": "DEBUG"
         },
     }
 }
-
 
 MAPPING_TOOL_URL = 'http://localhost:8080/node/'
 

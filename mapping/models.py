@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from django.core.serializers.json import DjangoJSONEncoder
@@ -53,7 +55,7 @@ class MappingCodesystemComponent(models.Model):
     """Mapping Codesystem Component."""
 
     # codesystem_id       = models.CharField(max_length=50)
-    codesystem_id = models.ForeignKey(MappingCodesystem, on_delete=models.PROTECT)
+    codesystem_id = models.ForeignKey('MappingCodesystem', on_delete=models.PROTECT)
     component_id = models.CharField(max_length=50)
     component_title = models.CharField(max_length=500)
     component_created = models.DateTimeField(default=timezone.now)
@@ -197,13 +199,13 @@ class MappingTaskStatus(models.Model):
 class MappingTask(models.Model):
     """Mapping tasks."""
 
-    project_id = models.ForeignKey(MappingProject, on_delete=models.PROTECT, related_name="tasks")
+    project_id = models.ForeignKey(
+        MappingProject, on_delete=models.PROTECT, related_name="tasks"
+    )
     category = models.CharField(max_length=500)
     # Uniek ID in codesystem = MappingCodesystemComponent:id
-    source_component = (
-        models.ForeignKey(
-            MappingCodesystemComponent, on_delete=models.PROTECT
-        )
+    source_component = models.ForeignKey(
+        MappingCodesystemComponent, on_delete=models.PROTECT
     )
     # Uniek ID van codesystem waar vandaan in deze taak gemapt moet worden
     source_codesystem = models.ForeignKey(
@@ -225,8 +227,12 @@ class MappingTask(models.Model):
     )
     # ID van gebruiker
     user = models.ForeignKey(
-        User, on_delete=models.PROTECT, default=None, null=True, blank=True,
-        related_name="tasks"
+        User,
+        on_delete=models.PROTECT,
+        default=None,
+        null=True,
+        blank=True,
+        related_name="tasks",
     )
     # ID van status
     status = models.ForeignKey(
@@ -319,17 +325,60 @@ class MappingEclPart(models.Model):
     )
 
     # Export to mapping rules finished?
-    export_finished = models.BooleanField(
-        default=True
-    )
+    export_finished = models.BooleanField(default=True)
     # Retrieved result of query from Snowstorm?
-    finished = models.BooleanField(
-        default=False
-    )
-    # Query or export failed?
+    finished = models.BooleanField(default=False)
+    # Query or export failed?2
     failed = models.BooleanField(default=False)
 
     objects = models.Manager()
+
+
+class MappingECLConcept(models.Model):
+    """Mapping ECL Part Result entity.
+
+    Used to store ECL query result data.
+    """
+
+    ecl = models.ForeignKey(
+        MappingEclPart, related_name="concepts", on_delete=models.CASCADE
+    )
+    task = models.ForeignKey(
+        MappingTask, related_name="concepts", on_delete=models.CASCADE
+    )
+    code = models.CharField(max_length=50)
+    module_id = models.CharField(max_length=255)
+    effective_time = models.DateField(blank=True, null=True)
+    definition_status = models.CharField(max_length=15)
+    id_and_fsn_term = models.TextField()
+    active = models.BooleanField()
+    preferred_title = models.TextField()
+    pt_lang = models.CharField(max_length=2)
+    fsn = models.TextField()
+    fsn_lang = models.CharField(max_length=2)
+
+    objects = models.Manager()
+
+    @classmethod
+    def from_part_result(cls, ecl_part: MappingEclPart, result: dict):
+        """Create MappingECLConcept instance from MappingECLPart and it's result."""
+        concept_date = None
+        if result["effectiveTime"]:
+            concept_date = datetime.strptime(result["effectiveTime"], "%Y%m%d")
+        return cls(
+            ecl=ecl_part,
+            task_id=ecl_part.task_id,
+            code=result["conceptId"],
+            module_id=result["moduleId"],
+            effective_time=concept_date,
+            definition_status=result["definitionStatus"],
+            id_and_fsn_term=result["idAndFsnTerm"],
+            active=result["active"],
+            preferred_title=result["pt"]["term"],
+            pt_lang=result["pt"]["lang"],
+            fsn=result["fsn"]["term"],
+            fsn_lang=result["fsn"]["lang"],
+        )
 
 
 class MappingEclPartExclusion(models.Model):
