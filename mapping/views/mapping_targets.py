@@ -1,4 +1,5 @@
 from django.db.models import Count
+from rest_framework import filters
 from rest_framework.generics import ListAPIView, ListCreateAPIView
 
 from mapping.models import (
@@ -31,6 +32,8 @@ class MappingTaskTargetsView(TaskRelatedView, ListCreateAPIView):
     """List and create mapping targets (MappingRules)."""
 
     serializer_class = MappingRuleSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['source_component__component_id', 'source_component__component_title', 'mapcorrelation']
 
     def get_queryset(self):
         task = MappingTask.objects.get(pk=self.kwargs["task_pk"])
@@ -38,7 +41,7 @@ class MappingTaskTargetsView(TaskRelatedView, ListCreateAPIView):
         return (
             MappingRule.objects.filter(
                 project_id=task.project_id,
-                target_component=task.source_component,
+                # target_component=task.source_component,
             )
             .select_related(
                 "source_component",

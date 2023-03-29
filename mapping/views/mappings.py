@@ -5,6 +5,7 @@ import time
 import uuid
 
 import requests
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from celery.execute import send_task
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -13,6 +14,9 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import permissions
+from mapping.enums import ProjectTypes
+from mapping.permissions import MappingProjectAccessPermission, MappingTaskAccessPermission
+from mapping.serializers import MappingRuleSerializer
 
 from mapping.tasks import createRulesFromEcl, createRulesForAllTasks, update_ecl_task
 from mapping.models import (
@@ -1335,55 +1339,25 @@ class MappingRemoveRules(viewsets.ViewSet):
             return Response("Nope - mag jij helemaal niet.")
 
 
-class MappingReverse(viewsets.ViewSet):
-    permission_classes = [Permission_MappingProject_Access]
+class MappingReverse(ListAPIView):
+    permission_classes = [
+        MappingProjectAccessPermission,
+        MappingTaskAccessPermission,
+    ]
+    serializer_class = MappingRuleSerializer
 
-    def retrieve(self, request, pk=None):
-        print(f"[mappings/MappingReverse retrieve] requested by {request.user} - {pk}")
-        task = MappingTask.objects.select_related(
-            "project_id",
-        ).get(id=pk)
-        component = MappingCodesystemComponent.objects.get(id=task.source_component.id)
-        if task.project_id.project_type == "1":
-            reverse_mappings = MappingRule.objects.filter(
-                target_component=component
-            ).select_related("source_component")
+    def get_queryset(self):
+        task = MappingTask.objects.select_related("project_id").get(pk=self.kwargs["task_pk"])
 
-            reverse = []
-            for mapping in reverse_mappings:
-                reverse.append(
-                    {
-                        "id": mapping.source_component.component_id,
-                        "title": mapping.source_component.component_title,
-                        "codesystem": {
-                            "id": mapping.source_component.codesystem_id.id,
-                            "title": mapping.source_component.codesystem_id.codesystem_title,
-                        },
-                        "correlation": mapping.mapcorrelation,
-                    }
-                )
+        queryset = MappingRule.objects.select_related("source_component", "source_component__codesystem_id", "target_component", "target_component__codesystem_id")
 
-        elif task.project_id.project_type == "4":
-            reverse_mappings = MappingRule.objects.filter(
-                source_component=component
-            ).select_related("target_component", "target_component__codesystem_id")
-
-            reverse = []
-            for mapping in reverse_mappings:
-                reverse.append(
-                    {
-                        "id": mapping.target_component.component_id,
-                        "title": mapping.target_component.component_title,
-                        "codesystem": {
-                            "id": mapping.target_component.codesystem_id.id,
-                            "title": mapping.target_component.codesystem_id.codesystem_title,
-                        },
-                        "correlation": mapping.mapcorrelation,
-                    }
-                )
-
-        # output = " /".join(reverse)
-        return Response(reverse)
+        if task.project_id.project_type == ProjectTypes.one_to_many.value:
+            queryset = queryset.filter(target_component_id=task.source_component_id)
+        elif task.project_id.project_type == ProjectTypes.snomed_ecl_to_one.value:
+            queryset = queryset.filter(source_component_id=task.source_component_id)
+        else:
+            queryset = queryset.none()
+        return queryset
 
 
 class MappingRulesInvolvingCodesystem(viewsets.ViewSet):

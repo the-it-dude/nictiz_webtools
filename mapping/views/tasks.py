@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import permissions
@@ -22,7 +22,7 @@ from mapping.models import (
     MappingTask,
     MappingTaskStatus,
 )
-from mapping.permissions import MappingProjectAccessPermission
+from mapping.permissions import MappingProjectAccessPermission, MappingTaskAccessPermission
 from mapping.serializers import MappingTaskSerializer
 
 
@@ -181,10 +181,20 @@ class ProjectTasklist(ListAPIView):
         return tasks
 
 
-class TaskDetails(viewsets.ViewSet):
-    permission_classes = [MappingProjectAccessPermission]
+class TaskDetails(RetrieveAPIView):
+    permission_classes = [
+        MappingProjectAccessPermission,
+        MappingTaskAccessPermission,
+    ]
+    serializer_class = MappingTaskSerializer
 
-    def retrieve(self, request, pk=None):
+    def get_object(self):
+        queryset = MappingTask.objects.all().select_related("user", "source_component", "source_component__codesystem_id", "status")
+        if "project_pk" in self.kwargs:
+            queryset = queryset.filter(project_id_id=self.kwargs["project_pk"])
+        return queryset.get(pk=self.kwargs["task_pk"])
+
+    def x():
         print(f"[tasks/TaskDetails retrieve] requested by {request.user} - {pk}")
 
         # Get data

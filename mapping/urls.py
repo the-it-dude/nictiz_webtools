@@ -74,7 +74,6 @@ router_1_0.register(
 
 router_1_0.register(r"codesystems", views.Codesystems, basename="Mapping Codesystems")
 router_1_0.register(r"projects", views.Projects, basename="Mapping Projects")
-router_1_0.register(r"taskdetails", views.TaskDetails, basename="Mapping tasks")
 router_1_0.register(
     r"events_and_comments",
     views.EventsAndComments,
@@ -113,7 +112,7 @@ router_1_0.register(
 router_1_0.register(
     r"mapping_reset_task", views.MappingTaskReset, basename="Reset a task"
 )
-router_1_0.register(r"reverse", views.MappingReverse, basename="Reverse mappings")
+# router_1_0.register(r"reverse", views.MappingReverse, basename="Reverse mappings")
 router_1_0.register(r"mapping_dialog", views.MappingDialog, basename="Mappings")
 router_1_0.register(
     r"componentsearch", views.MappingTargetSearch, basename="Component search endpoint"
@@ -162,7 +161,7 @@ urlpatterns = [
         name="task_parts",
     ),
     path(
-        r"api/1.0/projects/<int:project_pk>/tasks/<int:task_pk>/targets/",
+        r"api/1.0/projects/<int:project_pk>/tasks/<int:task_pk>/rules/",
         views.MappingTaskTargetsView.as_view(),
         name="task_targets",
     ),
@@ -177,9 +176,19 @@ urlpatterns = [
         name="task_related_tasks",
     ),
     path(
+        r"api/1.0/projects/<int:project_pk>/tasks/<int:task_pk>/reverse-mappings/",
+        views.MappingReverse.as_view(),
+        name="task_reverse_mappings",
+    ),
+    path(
         r"api/1.0/projects/<int:project_pk>/tasks/<int:task_pk>/results/",
         views.MappingECLConceptsView.as_view(),
         name="task_results",
+    ),
+    path(
+        r"api/1.0/projects/<int:project_pk>/tasks/<int:task_pk>/",
+        views.TaskDetails.as_view(),
+        name="task_details",
     ),
     path(
         r"api/1.0/projects/<int:project_pk>/tasks/",
@@ -191,6 +200,7 @@ urlpatterns = [
         views.MappingProjectUsers.as_view(),
         name="project_users",
     ),
+
     # Legacy
     path(
         r"api/1.0/tasklist/<int:project_pk>/",
@@ -203,9 +213,20 @@ urlpatterns = [
         name="related_tasks",
     ),  # TODO: Deprecate in favor of `task_related_tasks`
     path(
+        r"api/1.0/reverse/<int:task_pk>/",
+        views.MappingReverse.as_view(),
+        name="legacy_mapping_reverse"
+    ),  # TODO: Deperecate in favor of `task_reverse_mappings`
+    path(
+        r"api/1.0/taskdetails/<int:task_pk>/",
+        views.TaskDetails.as_view(),
+        name="legacy_taks_details"
+    ),  # TODO: Deperecate in favor of `task_details`
+    path(
         r"api/1.0/users/<int:project_pk>/", views.MappingProjectUsers.as_view()
     ),  # TODO: Deprecate in favor of `project_users`
     path(r"api/1.0/", include(router_1_0.urls)),
+
     # The last remnants of the old static interface
     url(
         r"updatecodesystems/",

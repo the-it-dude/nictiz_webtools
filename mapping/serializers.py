@@ -53,9 +53,10 @@ class MappingTaskStatusSerializer(serializers.ModelSerializer):
 class MappingTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = MappingTask
-        fields = ("id", "user", "component", "status")
+        fields = ("id", "user", "project", "component", "status")
 
     user = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
     component = MappingCodesystemExtendedComponentSerializer(
         source="source_component", read_only=True
     )
@@ -74,17 +75,22 @@ class MappingTaskSerializer(serializers.ModelSerializer):
             "name": obj.user.get_full_name(),
         }
 
+    def get_project(self, obj: MappingTask) -> dict:
+        return {
+            "id": obj.project_id_id
+        }
+
 
 class MappingRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = MappingRule
         fields = ("id", "source", "target", "correlation")
 
-    source = MappingCodesystemComponentSerializer(
+    source = MappingCodesystemExtendedComponentSerializer(
         source="source_component", read_only=True
     )
     target = MappingCodesystemExtendedComponentSerializer(
-        source="starget_component", read_only=True
+        source="target_component", read_only=True
     )
     correlation = serializers.CharField(source="mapcorrelation")
 
