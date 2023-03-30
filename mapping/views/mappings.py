@@ -535,9 +535,8 @@ class AddRemoteExclusion(viewsets.ViewSet):
             f"[mappings/AddRemoteExclusion create] requested by {request.user} - data: {str(request.data)[:500]}"
         )
 
-        result = None
+        output = 0
         try:
-            output = []
             if "mapping | edit mapping" in request.user.groups.values_list(
                 "name", flat=True
             ):

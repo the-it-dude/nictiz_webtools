@@ -390,7 +390,7 @@ class MappingEclPartExclusion(models.Model):
     will exclude the results of all ECL queries linked to A80 for the linked task.
     """
 
-    task = models.ForeignKey(MappingTask, on_delete=models.PROTECT)
+    task = models.ForeignKey(MappingTask, on_delete=models.PROTECT, related_name="exclusion")
     components = models.JSONField(
         encoder=DjangoJSONEncoder, default=list, blank=True, null=True
     )

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from mapping.models import (
+    MappingEclPartExclusion,
     MappingTask,
     MappingCodesystemComponent,
     MappingCodesystem,
@@ -53,7 +54,7 @@ class MappingTaskStatusSerializer(serializers.ModelSerializer):
 class MappingTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = MappingTask
-        fields = ("id", "user", "project", "component", "status")
+        fields = ("id", "user", "project", "component", "status", "exclusion")
 
     user = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
@@ -61,6 +62,7 @@ class MappingTaskSerializer(serializers.ModelSerializer):
         source="source_component", read_only=True
     )
     status = MappingTaskStatusSerializer(read_only=True)
+    exclusion = serializers.SerializerMethodField()
 
     def get_user(self, obj: MappingTask) -> dict:
         if obj.user is None:
@@ -79,6 +81,12 @@ class MappingTaskSerializer(serializers.ModelSerializer):
         return {
             "id": obj.project_id_id
         }
+
+    def get_exclusion(self, obj: MappingTask) -> list:
+        exclusion = obj.exclusion.first()
+        if exclusion is not None:
+            return [c for c in exclusion.components if c]
+        return []
 
 
 class MappingRuleSerializer(serializers.ModelSerializer):
@@ -129,7 +137,7 @@ class MappingECLConceptExclusionSerializer(serializers.ModelSerializer):
         fields = ("key", "component")
 
     key = serializers.CharField(source="code")
-    component = MappingCodesystemComponentSerializer(source="task__source_component")
+    component = MappingCodesystemComponentSerializer(source="task.source_component")
 
 
 class MappingECLConceptSerializer(serializers.ModelSerializer):
