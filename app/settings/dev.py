@@ -1,5 +1,7 @@
 from app.settings.base import *
 
+raise Exception("HAHAHA")
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '+kbl$5-%8x4dn$l_cf%^^6kjb0+f5lm3rvlt56+z!)*#_^-5gm'

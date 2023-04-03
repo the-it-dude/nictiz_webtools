@@ -144,7 +144,7 @@ def UpdateECL1Task(record_id: int, query: str) -> str:
     return str(currentQuery)
 
 
-def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Optional[str] = None, attempt: typing.Optional[int] = None, items: typing.Optional[list] = None) -> MappingEclPart:
+def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Optional[str] = None, attempt: typing.Optional[int] = None, items: typing.Optional[list] = None) -> typing.Tuple[bool, typing.Optional[MappingEclPart]]:
     """Perform ECL Query and return updated Mapping Ecl Part.
 
     Args:
@@ -171,7 +171,7 @@ def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Op
     try:
         response = requests.get(url, params={"Accept-Language": "nl"})
     except Exception as e:
-        logger.error(f"Other breaking error in UpdateECL1Task ({ecl_part.pk}):", e)
+        logger.error("Other breaking error in UpdateECL1Task (%s): %s", ecl_part.pk, e)
 
         status_code = 666
         error = f"Na {attempt} pogingen opgegeven: {e}"
