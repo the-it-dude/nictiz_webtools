@@ -33,7 +33,11 @@ class MappingTaskTargetsView(TaskRelatedView, ListCreateAPIView):
 
     serializer_class = MappingRuleSerializer
     filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['source_component__component_id', 'source_component__component_title', 'mapcorrelation']
+    ordering_fields = [
+        "source_component__component_id",
+        "source_component__component_title",
+        "mapcorrelation",
+    ]
 
     def get_queryset(self):
         task = MappingTask.objects.get(pk=self.kwargs["task_pk"])
@@ -59,7 +63,12 @@ class MappingTaskExclusionsView(TaskRelatedView, ListAPIView):
     serializer_class = MappingECLConceptExclusionSerializer
 
     def get_queryset(self):
-        exclusion = MappingEclPartExclusion.objects.select_related("task").get(task_id=self.kwargs["task_pk"])
+        try:
+            exclusion = MappingEclPartExclusion.objects.select_related("task").get(
+                task_id=self.kwargs["task_pk"]
+            )
+        except MappingEclPartExclusion.DoesNotExist:
+            return MappingECLConcept.objects.none()
 
         # Filter empty and incorrect components.
         components = [c for c in exclusion.components if c]

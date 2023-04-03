@@ -131,6 +131,8 @@ class ProjectTasklistTestCase(TestCase):
                                 "title": task1.source_component.codesystem_id.codesystem_title,
                             },
                         },
+                        "exclusion": [],
+                        "project": {"id": task1.project_id.id},
                         "status": {
                             "id": task1.status.id,
                             "title": task1.status.status_title,
