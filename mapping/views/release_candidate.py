@@ -1,24 +1,12 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
-from django.conf import settings
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from django.template.defaultfilters import linebreaksbr
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.models import User, Group, Permission
-from urllib.request import urlopen, Request
-import urllib.parse
-from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
-from django.utils import timezone
-from django.db.models import Q
-import json
-from mapping.models import *
-import time
-import environ
+from django.contrib.auth.models import User
 
 from rest_framework import viewsets
-from mapping.tasks import *
-from rest_framework import status, views, permissions
+from rest_framework import status, permissions
 from rest_framework.response import Response
+
+from mapping.models import *
+from mapping.tasks import GenerateFHIRConceptMap, exportCodesystemToRCRules
+
 
 class Permission_MappingRcAudit(permissions.BasePermission):
     """

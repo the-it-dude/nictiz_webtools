@@ -1,11 +1,10 @@
-from celery.task.control import inspect
-
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import permissions
 
-from mapping.tasks import *
-from mapping.models import *
+from app.celery import app
+from mapping.tasks import audit_async
+from mapping.models import MappingTask, MappingTaskAudit, MappingProject
 
 class Permission_MappingProject_Access(permissions.BasePermission):
     """
@@ -30,7 +29,7 @@ class MappingTriggerAudit(viewsets.ViewSet):
         print(f"[audits/MappingTriggerAudit retrieve] requested by {request.user} - {pk}")
         try:
             task = MappingTask.objects.get(id=pk)
-            send_task('mapping.tasks.qa_orchestrator.audit_async', ['multiple_mapping', task.project_id.id, task.id], {})
+            audit_async.delay('multiple_mapping', task.project_id.id, task.id)
             return Response(True)
         except Exception as e:
             print(e)
@@ -43,7 +42,7 @@ class MappingTriggerProjectAudit(viewsets.ViewSet):
         print(f"[audits/MappingTriggerProjectAudit retrieve] requested by {request.user} - {pk}")
         try:
             project = MappingProject.objects.get(id=pk)
-            send_task('mapping.tasks.qa_orchestrator.audit_async', ['multiple_mapping', project.id, None], {})
+            audit_async.delay('multiple_mapping', project.id, None)
 
             return Response(True)
         except Exception as e:
@@ -152,7 +151,7 @@ class MappingAuditStatus(viewsets.ViewSet):
 
     def retrieve(self, request, pk=None):
         print(f"[audits/MappingAuditStatus retrieve] requested by {request.user} - {pk}")
-        i = inspect()
+        i = app.control.inspect()
         active = i.active()
         info = []
         if not active:
@@ -178,7 +177,7 @@ class MappingAuditStatus(viewsets.ViewSet):
     
     def list(self, request):
         print(f"[audits/MappingAuditStatus list] requested by {request.user}")
-        i = inspect()
+        i = app.control.inspect()
         active = i.active()
         processes = []
         if not active:

@@ -1,18 +1,9 @@
 # Create your tasks here
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
-import time, json
-from celery.task.schedules import crontab
-from celery.result import AsyncResult
-from celery.decorators import periodic_task
 from celery.utils.log import get_task_logger
-from celery.execute import send_task
-import xmltodict
 from mapping.models import *
-import urllib.request
-from pandas import read_excel, read_csv
 import environ
-from snowstorm_client import Snowstorm
 
 # Import environment variables
 env = environ.Env(DEBUG=(bool, False))
@@ -201,7 +192,7 @@ def createRulesForAllTasks(project_id=False, all_tasks=False):
         # If rules present, run createRulesFromEcl
         if (all_tasks) or (rules > 0):
             # logger.info(f"[{task.id}] Found {rules} rules for task {task.id}. -> Creating rules")
-            send_task('mapping.tasks.createRulesFromEcl.createRulesFromEcl', [task.id])
+            createRulesFromEcl.delay(task.id)
             # logger.info(f"[{task.id}] Finished creating {rules} rules for task {task.id}.")
         else:
             # logger.info(f"Found {rules} rules for task {task.id}. -> Not creating rules")

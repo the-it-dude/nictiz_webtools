@@ -5,20 +5,7 @@
 
 # Create your tasks here
 from __future__ import absolute_import, unicode_literals
-from celery import shared_task
-import time, json
-from celery.task.schedules import crontab
-from celery.result import AsyncResult
-from celery.decorators import periodic_task
 from celery.utils.log import get_task_logger
-import xmltodict
-import urllib.request
-import environ
-
-# Import environment variables
-env = environ.Env(DEBUG=(bool, False))
-# reading .env file
-environ.Env.read_env(env.str('ENV_PATH', '.env'))
 
 logger = get_task_logger(__name__)
 

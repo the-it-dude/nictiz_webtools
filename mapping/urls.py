@@ -1,4 +1,3 @@
-from django.conf.urls import url
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
@@ -228,11 +227,11 @@ urlpatterns = [
     path(r"api/1.0/", include(router_1_0.urls)),
 
     # The last remnants of the old static interface
-    url(
+    path(
         r"updatecodesystems/",
         views.api_UpdateCodesystems_post.as_view(),
         name="updatecodesystems",
     ),
-    url(r"", views.vue_MappingIndex.as_view(), name="index"),
+    path(r"", views.vue_MappingIndex.as_view(), name="index"),
     # url(r'', views.Tasklist.as_view(), name='index'),
 ]

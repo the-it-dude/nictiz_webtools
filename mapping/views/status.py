@@ -1,32 +1,10 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
-from django.template.defaultfilters import linebreaksbr
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
-from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
-from django.urls import reverse
-from django.db.models import Q
-from datetime import datetime
-from celery.task.control import inspect, revoke
-from pandas import read_excel, read_csv
-import xmltodict
-import sys, os
-import environ
-import time
-import random
 import json
-import urllib.request
-import re
-import natsort
 
-from rest_framework import views, viewsets, status, permissions
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 
-from mapping.tasks import *
-from mapping.models import *
+from mapping.models import MappingProject, MappingTaskStatus, MappingTask, MappingCodesystemComponent, MappingRule, MappingEventLog
 
 class Permission_MappingProject_Access(permissions.BasePermission):
     """
@@ -61,6 +39,7 @@ class MappingStatuses(viewsets.ViewSet):
         return Response(output)
 
     def create(self, request):
+        from mapping.tasks.qa_orchestrator import audit_async
         print(f"[status/MappingStatuses create] requested by {request.user} - data: {str(request.data)[:500]}")
 
         task = MappingTask.objects.get(id=request.data.get('task'))
@@ -109,7 +88,7 @@ class MappingStatuses(viewsets.ViewSet):
                 user_source=current_user,
             )
             event.save()
-            send_task('mapping.tasks.qa_orchestrator.audit_async', ['multiple_mapping', task.project_id.id, task.id], {})
+            audit_async.delay('multiple_mapping', task.project_id.id, task.id)
 
             return Response([])
         else:

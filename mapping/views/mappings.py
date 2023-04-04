@@ -5,8 +5,7 @@ import time
 import uuid
 
 import requests
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from celery.execute import send_task
+from rest_framework.generics import ListAPIView
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
@@ -19,6 +18,7 @@ from mapping.permissions import MappingProjectAccessPermission, MappingTaskAcces
 from mapping.serializers import MappingRuleSerializer
 
 from mapping.tasks import createRulesFromEcl, createRulesForAllTasks, update_ecl_task
+from mapping.tasks.qa_orchestrator import audit_async
 from mapping.models import (
     MappingProject,
     MappingTask,
@@ -380,11 +380,8 @@ class MappingDialog(viewsets.ViewSet):
                         print(f"Mapping object: {str(mapping)}")
 
                     print("Start audit")
-                    send_task(
-                        "mapping.tasks.qa_orchestrator.audit_async",
-                        ["multiple_mapping", task.project_id.id, task.id],
-                        {},
-                    )
+
+                    audit_async.delay("multiple_mapping", task.project_id.id, task.id)
 
                 return Response(str(mapping))
             else:
@@ -772,11 +769,7 @@ class MappingTargets(viewsets.ViewSet):
                                     print("Done handling dependency for", dependency)
                                 mapping_rule.save()
 
-                        send_task(
-                            "mapping.tasks.qa_orchestrator.audit_async",
-                            ["multiple_mapping", task.project_id.id, task.id],
-                            {},
-                        )
+                        audit_async.delay("multiple_mapping", task.project_id.id, task.id)
 
                         return Response([])
                     # Handle ECL-1 mapping targets
