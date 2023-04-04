@@ -1,10 +1,11 @@
 # Create your tasks here
 from __future__ import absolute_import, unicode_literals
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
+from mapping.models import MappingEclPart, MappingProject, MappingTask
 from mapping.tasks import update_ecl_task
-from mapping.models import MappingProject, MappingTask, MappingEclPart
 
 logger = get_task_logger(__name__)
 
@@ -12,7 +13,9 @@ logger = get_task_logger(__name__)
 @shared_task
 def runAllEclQueriesInProject(projectid):
     project = MappingProject.objects.get(id=projectid)
-    logger.info(f"[runAllEclQueriesInProject] Started full-project run for project {project.title}")
+    logger.info(
+        f"[runAllEclQueriesInProject] Started full-project run for project {project.title}"
+    )
     tasks = MappingTask.objects.filter(project_id=project)
     for task in tasks:
         # Get all ECL queries for the task

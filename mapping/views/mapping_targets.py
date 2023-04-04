@@ -3,21 +3,21 @@ from rest_framework import filters
 from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView
 
 from mapping.models import (
-    MappingRule,
-    MappingTask,
+    MappingECLConcept,
     MappingEclPart,
     MappingEclPartExclusion,
-    MappingECLConcept,
+    MappingRule,
+    MappingTask,
 )
 from mapping.permissions import (
     MappingProjectAccessPermission,
     MappingTaskAccessPermission,
 )
 from mapping.serializers import (
-    MappingRuleSerializer,
-    MappingECLPartSerializer,
-    MappingECLConceptSerializer,
     MappingECLConceptExclusionSerializer,
+    MappingECLConceptSerializer,
+    MappingECLPartSerializer,
+    MappingRuleSerializer,
 )
 
 

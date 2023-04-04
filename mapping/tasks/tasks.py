@@ -1,21 +1,21 @@
 # Create your tasks here
+import json
 import sys
 import time
 import typing
 import urllib.request
+from urllib.parse import quote_plus
+
 import environ
-import json
 import requests
 import xmltodict
-from urllib.parse import quote_plus
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.conf import settings
-from pandas import read_excel, read_csv
-
-from terminologieserver.client import TerminiologieClient, TerminologieRequestError
+from pandas import read_csv, read_excel
 
 from mapping.models import *
+from terminologieserver.client import TerminiologieClient, TerminologieRequestError
 
 # Import environment variables
 env = environ.Env(DEBUG=(bool, False))
@@ -46,7 +46,7 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query = MappingEclPart.objects.get(id=record_id)
 
     # Set query into "running" state.
-    current_query.result  = {}
+    current_query.result = {}
     current_query.finished = False
     current_query.error = None
     current_query.failed = False
@@ -56,14 +56,11 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query.concepts.delete()
 
     client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
-    result = {
-        "concepts": {},
-        "numResults": 0
-    }
+    result = {"concepts": {}, "numResults": 0}
     try:
         client.login(
             username=settings.TERMINOLOGIE_USERNAME,
-            password=settings.TERMINOLOGIE_PASSWORD
+            password=settings.TERMINOLOGIE_PASSWORD,
         )
 
         expansion_result = client.expand_snomed_ecl_valueset(ecl_query=query)
@@ -73,9 +70,9 @@ def update_ecl_task(record_id: int, query: str) -> str:
             if "parameter" in code_details:
                 code.update(client.params_to_dict(code_details["parameter"]))
 
-            result["concepts"][code["code"]] = client.expanded_data_to_snowstorm_mapping(
-                expanded_data=code
-            )
+            result["concepts"][
+                code["code"]
+            ] = client.expanded_data_to_snowstorm_mapping(expanded_data=code)
     except TerminologieRequestError as e:
         current_query.failed = True
         current_query.error = str(e)
@@ -95,10 +92,11 @@ def update_ecl_task(record_id: int, query: str) -> str:
 
         concepts = []
         for concept in result["concepts"].values():
-            concepts.append(MappingECLConcept.from_part_result(
-                ecl_part=current_query,
-                result=concept
-            ))
+            concepts.append(
+                MappingECLConcept.from_part_result(
+                    ecl_part=current_query, result=concept
+                )
+            )
         MappingECLConcept.objects.bulk_create(concepts)
 
     return str(current_query)
@@ -144,7 +142,13 @@ def UpdateECL1Task(record_id: int, query: str) -> str:
     return str(currentQuery)
 
 
-def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Optional[str] = None, attempt: typing.Optional[int] = None, items: typing.Optional[list] = None) -> typing.Tuple[bool, typing.Optional[MappingEclPart]]:
+def make_ecl_query(
+    ecl_part: MappingEclPart,
+    query: str,
+    search_after: typing.Optional[str] = None,
+    attempt: typing.Optional[int] = None,
+    items: typing.Optional[list] = None,
+) -> typing.Tuple[bool, typing.Optional[MappingEclPart]]:
     """Perform ECL Query and return updated Mapping Ecl Part.
 
     Args:
@@ -188,15 +192,13 @@ def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Op
 
     if status_code != 200:
         if status_code < 400 and attempt <= MAX_REQUEST_RETRIES:
-            logger.error(
-                f"Sleeping {REQUEST_RETRY_SLEEP_TIME * attempt} and retrying."
-            )
+            logger.error(f"Sleeping {REQUEST_RETRY_SLEEP_TIME * attempt} and retrying.")
             time.sleep(REQUEST_RETRY_SLEEP_TIME * attempt)
             return make_ecl_query(
                 ecl_part=ecl_part,
                 query=query,
                 search_after=search_after,
-                attempt=attempt + 1
+                attempt=attempt + 1,
             )
         return False, error
 
@@ -208,7 +210,7 @@ def make_ecl_query(ecl_part: MappingEclPart, query: str, search_after: typing.Op
             query=query,
             search_after=response_data["searchAfter"],
             attempt=attempt,
-            items=items
+            items=items,
         )
 
     return True, {

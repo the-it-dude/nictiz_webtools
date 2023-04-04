@@ -5,30 +5,30 @@ import time
 import uuid
 
 import requests
-from rest_framework.generics import ListAPIView
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
-from rest_framework import viewsets
-from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework import permissions, status, viewsets
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework import permissions
-from mapping.enums import ProjectTypes
-from mapping.permissions import MappingProjectAccessPermission, MappingTaskAccessPermission
-from mapping.serializers import MappingRuleSerializer
 
-from mapping.tasks import createRulesFromEcl, createRulesForAllTasks, update_ecl_task
-from mapping.tasks.qa_orchestrator import audit_async
+from mapping.enums import ProjectTypes
 from mapping.models import (
-    MappingProject,
-    MappingTask,
-    MappingEclPart,
-    MappingEclPartExclusion,
-    MappingRule,
     MappingCodesystem,
     MappingCodesystemComponent,
+    MappingEclPart,
+    MappingEclPartExclusion,
+    MappingProject,
+    MappingRule,
+    MappingTask,
 )
-
+from mapping.permissions import (
+    MappingProjectAccessPermission,
+    MappingTaskAccessPermission,
+)
+from mapping.serializers import MappingRuleSerializer
+from mapping.tasks import createRulesForAllTasks, createRulesFromEcl, update_ecl_task
+from mapping.tasks.qa_orchestrator import audit_async
 
 logger = logging.getLogger(__name__)
 
@@ -769,7 +769,9 @@ class MappingTargets(viewsets.ViewSet):
                                     print("Done handling dependency for", dependency)
                                 mapping_rule.save()
 
-                        audit_async.delay("multiple_mapping", task.project_id.id, task.id)
+                        audit_async.delay(
+                            "multiple_mapping", task.project_id.id, task.id
+                        )
 
                         return Response([])
                     # Handle ECL-1 mapping targets
@@ -1339,9 +1341,16 @@ class MappingReverse(ListAPIView):
     serializer_class = MappingRuleSerializer
 
     def get_queryset(self):
-        task = MappingTask.objects.select_related("project_id").get(pk=self.kwargs["task_pk"])
+        task = MappingTask.objects.select_related("project_id").get(
+            pk=self.kwargs["task_pk"]
+        )
 
-        queryset = MappingRule.objects.select_related("source_component", "source_component__codesystem_id", "target_component", "target_component__codesystem_id")
+        queryset = MappingRule.objects.select_related(
+            "source_component",
+            "source_component__codesystem_id",
+            "target_component",
+            "target_component__codesystem_id",
+        )
 
         if task.project_id.project_type == ProjectTypes.one_to_many.value:
             queryset = queryset.filter(target_component_id=task.source_component_id)
