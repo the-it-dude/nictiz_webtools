@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import ArrayField
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
 
+from app.model_fields import ArrayField
 from mapping.enums import EventActionOptions, ProjectTypes, RCStatus, RuleCorrelations
 
 
@@ -174,7 +174,7 @@ class MappingProject(models.Model):
 
     def __str__(self):
         return str(self.id) + " " + str(self.title)
-
+3
 
 class MappingTaskStatus(models.Model):
     """Mapping Task Status."""
@@ -498,7 +498,7 @@ class MappingReleaseCandidate(models.Model):
     metadata_sourceUri = models.TextField(default=None, blank=True, null=True)
     # Projects to include in export
     export_project = models.ManyToManyField(
-        MappingProject, related_name="project", default=[], blank=True
+        MappingProject, related_name="project", blank=True
     )
     # Who has access to the RC
     access = models.ManyToManyField(
