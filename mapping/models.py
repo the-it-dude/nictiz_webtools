@@ -12,6 +12,11 @@ from mapping.enums import EventActionOptions, ProjectTypes, RCStatus, RuleCorrel
 class MappingCodesystem(models.Model):
     """Mapping Codesystems."""
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["id"], name="Unique ID"),
+        ]
+
     codesystem_title = models.CharField(max_length=500)
     codesystem_version = models.CharField(max_length=500)
     codesystem_fhir_uri = models.CharField(
@@ -54,8 +59,14 @@ class MappingCodesystem(models.Model):
 class MappingCodesystemComponent(models.Model):
     """Mapping Codesystem Component."""
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["codesystem_id"]),
+            models.Index(fields=["component_id"]),
+        ]
+
     # codesystem_id       = models.CharField(max_length=50)
-    codesystem_id = models.ForeignKey('MappingCodesystem', on_delete=models.PROTECT)
+    codesystem_id = models.ForeignKey("MappingCodesystem", on_delete=models.PROTECT)
     component_id = models.CharField(max_length=50)
     component_title = models.CharField(max_length=500)
     component_created = models.DateTimeField(default=timezone.now)
@@ -78,12 +89,6 @@ class MappingCodesystemComponent(models.Model):
     )
 
     objects = models.Manager()
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["codesystem_id"]),
-            models.Index(fields=["component_id"]),
-        ]
 
     def __str__(self):
         return " - ".join(
@@ -225,6 +230,8 @@ class MappingTask(models.Model):
         null=True,
         blank=True,
     )
+    # Exclusions
+    exclusions = ArrayField(models.CharField(max_length=20), null=True, blank=True)
     # ID van gebruiker
     user = models.ForeignKey(
         User,
@@ -382,7 +389,10 @@ class MappingECLConcept(models.Model):
 
 
 class MappingEclPartExclusion(models.Model):
-    """Mapping ECL Part Exclusions.
+    """
+    DEPRECATED. Use task.exclusion.
+
+    Mapping ECL Part Exclusions.
 
     For use with the vue mapping tooling
     Used to exclude the result of the ECL mapping of another component.
@@ -390,7 +400,7 @@ class MappingEclPartExclusion(models.Model):
     will exclude the results of all ECL queries linked to A80 for the linked task.
     """
 
-    task = models.ForeignKey(MappingTask, on_delete=models.PROTECT, related_name="exclusion")
+    task = models.ForeignKey(MappingTask, on_delete=models.PROTECT)
     components = models.JSONField(
         encoder=DjangoJSONEncoder, default=list, blank=True, null=True
     )

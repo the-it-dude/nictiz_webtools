@@ -197,13 +197,12 @@ class ProjectTasklist(ListAPIView):
             f"[tasks/Tasklist retrieve] requested by {self.request.user} - {pk}"
         )
 
-        tasks = (
-            MappingTask.objects.select_related(
-                "status", "user", "source_component", "source_component__codesystem_id"
-            )
-            .prefetch_related("exclusion")
-            .filter(project_id=pk)
-        )
+        tasks = MappingTask.objects.select_related(
+            "status",
+            "user",
+            "source_component",
+            "source_component__codesystem_id",
+        ).filter(project_id=pk)
 
         if pk in settings.PROJECTS_SORTED_ALPHABETICALLY:
             tasks = tasks.order_by("source_component__component_title")

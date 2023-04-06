@@ -83,10 +83,7 @@ class MappingTaskSerializer(serializers.ModelSerializer):
         }
 
     def get_exclusion(self, obj: MappingTask) -> list:
-        exclusion = obj.exclusion.first()
-        if exclusion is not None:
-            return [c for c in exclusion.components if c]
-        return []
+        return [] if obj.exclusions is None else list(obj.exclusions)
 
 
 class MappingRuleSerializer(serializers.ModelSerializer):

@@ -15,9 +15,7 @@ def migrate_results(apps, _):
     MappingECLPart = apps.get_model("mapping", "MappingECLPart")
     MappingECLConcept = apps.get_model("mapping", "MappingECLConcept")
 
-    parts = MappingECLPart.objects.exclude(
-        Q(failed=True) | Q(finished=False)
-    )
+    parts = MappingECLPart.objects.exclude(Q(failed=True) | Q(finished=False))
     print("-")
     print(parts.count())
     total = 0
@@ -29,23 +27,28 @@ def migrate_results(apps, _):
             concept_date = None
             if result["effectiveTime"]:
                 concept_date = datetime.strptime(result["effectiveTime"], "%Y%m%d")
-            concepts.append(MappingECLConcept(
-                ecl=part,
-                task_id=part.task_id,
-                code=result.get("conceptId"),
-                module_id=result.get("moduleId"),
-                effective_time=concept_date,
-                definition_status=result.get("definitionStatus"),
-                id_and_fsn_term=result.get("idAndFsnTerm", "{} | {}".format(
-                    result.get("conceptId"),
-                    result.get("fsn", {}).get("term", "")
-                )),
-                active=result.get("active"),
-                preferred_title=result.get("pt", {}).get("term", ""),
-                pt_lang=result.get("pt", {}).get("lang", ""),
-                fsn=result.get("fsn", {}).get("term", ""),
-                fsn_lang=result.get("fsn", {}).get("lang", "")
-            ))
+            concepts.append(
+                MappingECLConcept(
+                    ecl=part,
+                    task_id=part.task_id,
+                    code=result.get("conceptId"),
+                    module_id=result.get("moduleId"),
+                    effective_time=concept_date,
+                    definition_status=result.get("definitionStatus"),
+                    id_and_fsn_term=result.get(
+                        "idAndFsnTerm",
+                        "{} | {}".format(
+                            result.get("conceptId"),
+                            result.get("fsn", {}).get("term", ""),
+                        ),
+                    ),
+                    active=result.get("active"),
+                    preferred_title=result.get("pt", {}).get("term", ""),
+                    pt_lang=result.get("pt", {}).get("lang", ""),
+                    fsn=result.get("fsn", {}).get("term", ""),
+                    fsn_lang=result.get("fsn", {}).get("lang", ""),
+                )
+            )
         total += len(concepts)
         MappingECLConcept.objects.bulk_create(concepts)
 
@@ -62,11 +65,8 @@ def cleanup(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('mapping', '0124_auto_20230323_1603'),
+        ("mapping", "0124_auto_20230323_1603"),
     ]
 
-    operations = [
-        migrations.RunPython(code=migrate_results, reverse_code=cleanup)
-    ]
+    operations = [migrations.RunPython(code=migrate_results, reverse_code=cleanup)]

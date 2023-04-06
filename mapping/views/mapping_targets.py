@@ -1,6 +1,6 @@
 from django.db.models import Count
 from rest_framework import filters
-from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView
 
 from mapping.models import (
     MappingECLConcept,
@@ -63,19 +63,13 @@ class MappingTaskExclusionsView(TaskRelatedView, ListAPIView):
     serializer_class = MappingECLConceptExclusionSerializer
 
     def get_queryset(self):
-        try:
-            exclusion = MappingEclPartExclusion.objects.select_related("task").get(
-                task_id=self.kwargs["task_pk"]
-            )
-        except MappingEclPartExclusion.DoesNotExist:
-            return MappingECLConcept.objects.none()
-
+        task = MappingTask.objects.get(pk=self.kwargs["task_pk"])
         # Filter empty and incorrect components.
-        components = [c for c in exclusion.components if c]
+        components = [] if task.exclusions is None else task.exclusions
 
         queryset = MappingECLConcept.objects.filter(
-            task__project_id=exclusion.task.project_id_id,
-            task__source_component__component_id__in=list(components),
+            task__project_id=task.project_id_id,
+            task__source_component__component_id__in=components,
         ).select_related("task", "task__source_component")
         return queryset
 
