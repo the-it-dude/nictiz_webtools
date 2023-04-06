@@ -158,7 +158,8 @@ DATABASES = {
    }
 }
 
-CELERY_BROKER_URL = "amqp://guest:guest@rabbitmq:5672"
+CELERY_BROKER = env.str("CELERY_BROKER", default="pyamqp://guest:guest@rabbitmq:5672")
+CELERY_BACKEND = env.str("CELERY_BACKEND", default="rpc://guest:guest@rabbitmq/")
 
 
 # Internationalization

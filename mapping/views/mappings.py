@@ -848,19 +848,16 @@ class MappingTargets(viewsets.ViewSet):
                                 "message": "ECL-1 targets",
                             }
                         )
-                # Error - no access due to project or task requirements
-                else:
-                    return Response(
-                        "Geen toegang. Niet jouw taak? Geen toegang tot het project?"
-                    )
-            # Error - no acces due to no rights
-            else:
-                return Response("Geen toegang tot -edit mapping-")
+            # Error - no access due to project or task requirements
+            return Response({
+                "error":  "Geen toegang. Niet jouw taak? Geen toegang tot het project?"
+            }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print("\n\nException caught")
             print("Request by", str(request.user))
             print(e)
             print("\n\n")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, pk=None):
         request_uuid = str(uuid.uuid4())

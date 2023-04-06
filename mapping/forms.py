@@ -70,8 +70,14 @@ class TaskManagerForm(forms.Form):
     status             = forms.CharField(label='status', max_length=500, required=False)
     user               = forms.CharField(label='user', max_length=500, required=False)
 
+
 class EclQueryForm(forms.Form):
+    id = forms.CharField()
+    description = forms.CharField()
     query = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control'}))
+    delete = forms.BooleanField()
+    correlation_options = forms.CharField()
+
 
 class EclQueryBuilderForm(forms.Form):
     query_id    = forms.IntegerField(widget=forms.HiddenInput(), label='query_id')

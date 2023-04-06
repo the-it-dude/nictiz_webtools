@@ -5,13 +5,16 @@
 # @version 0.1
 
 
-deps:
-	pip install pip-tools
+deps-base:
 	pip-compile app/requirements/base.in --output-file=app/requirements/base.txt
 
+deps-prod:
+	pip-compile app/requirements/prod.in --output-file=app/requirements/prod.txt
+
 deps-dev:
-	pip install pip-tools
 	pip-compile app/requirements/dev.in --output-file=app/requirements/dev.txt
+
+deps: deps-base deps-prod deps-dev
 
 build: deps-dev
 	pip install -r app/requirements/dev.txt

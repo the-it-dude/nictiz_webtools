@@ -5,7 +5,9 @@
 #    pip-compile --output-file=app/requirements/base.txt app/requirements/base.in
 #
 amqp==5.1.1
-    # via kombu
+    # via
+    #   -r app/requirements/base.in
+    #   kombu
 asgiref==3.6.0
     # via django
 beautifulsoup4==4.12.0
@@ -73,8 +75,6 @@ idna==3.4
     # via requests
 kombu==5.2.4
     # via celery
-natsort==8.3.1
-    # via -r app/requirements/base.in
 numpy==1.24.2
     # via pandas
 openpyxl==3.1.2

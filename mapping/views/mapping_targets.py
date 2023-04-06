@@ -74,7 +74,7 @@ class MappingTaskExclusionsView(TaskRelatedView, ListAPIView):
         return queryset
 
 
-class MappingTaskECLPartsView(TaskRelatedView, ListAPIView):
+class MappingTaskECLPartsView(TaskRelatedView, ListCreateAPIView):
     """List ECL Parts for given task."""
 
     serializer_class = MappingECLPartSerializer
@@ -85,6 +85,7 @@ class MappingTaskECLPartsView(TaskRelatedView, ListAPIView):
             .annotate(concepts_count=Count("concepts"))
             .order_by("id")
         )
+
 
 
 class MappingECLConceptsView(TaskRelatedView, ListAPIView):

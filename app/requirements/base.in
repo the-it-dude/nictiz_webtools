@@ -1,6 +1,7 @@
 Django
 psycopg2-binary
 celery
+amqp
 pandas
 xlwt
 xlutils
@@ -16,6 +17,5 @@ xmltodict
 djangorestframework
 djangorestframework_simplejwt
 django-cors-headers
-natsort
 bs4
 pymsteams
