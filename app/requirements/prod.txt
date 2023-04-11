@@ -68,6 +68,7 @@ django==4.0
     #   django-appconf
     #   django-celery-beat
     #   django-cors-headers
+    #   django-filter
     #   django-select2
     #   djangorestframework
     #   djangorestframework-simplejwt
@@ -81,6 +82,8 @@ django-celery-beat==2.5.0
 django-cors-headers==3.14.0
     # via -r app/requirements/base.txt
 django-environ==0.10.0
+    # via -r app/requirements/base.txt
+django-filter==23.1
     # via -r app/requirements/base.txt
 django-select2==8.1.1
     # via -r app/requirements/base.txt

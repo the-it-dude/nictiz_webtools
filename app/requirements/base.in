@@ -11,6 +11,7 @@ requests
 cachetools
 django-celery-beat
 openpyxl
+django-filter
 django_select2
 django-environ
 xmltodict

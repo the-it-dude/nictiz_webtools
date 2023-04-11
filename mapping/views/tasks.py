@@ -3,7 +3,9 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
+import django_filters.rest_framework
 from rest_framework import permissions, viewsets
+from rest_framework import filters
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 
@@ -190,6 +192,9 @@ class CreateTasks(viewsets.ViewSet):
 class ProjectTasklist(ListAPIView):
     permission_classes = [MappingProjectAccessPermission]
     serializer_class = MappingTaskSerializer
+    filter_backends = [filters.SearchFilter, django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ["id", "category", "user", "status"]
+    search_fields = ["^id"]
 
     def get_queryset(self):
         pk = self.kwargs["project_pk"]

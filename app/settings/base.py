@@ -52,6 +52,7 @@ INSTALLED_APPS = (
     'django.contrib.postgres',
     'django.core.management',
     'django_celery_beat',
+    'django_filters',
     'rest_framework',
     'corsheaders',
     "jwtauth",
