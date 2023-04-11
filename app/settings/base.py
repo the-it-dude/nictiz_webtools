@@ -120,6 +120,7 @@ CORS_SUPPORTS_CREDENTIALS = True
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE=None
 CSRF_COOKIE_DOMAIN = env.str("CSRF_COOKIE_DOMAIN", default=".test-nictiz.nl")
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=["http://localhost:9123"])
 SESSION_COOKIE_DOMAIN = env.str("SESSION_COOKIE_DOMAIN", default=".test-nictiz.nl")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=['.test-nictiz.nl'])
 
@@ -158,8 +159,8 @@ DATABASES = {
    }
 }
 
-CELERY_BROKER = env.str("CELERY_BROKER", default="pyamqp://guest:guest@rabbitmq:5672")
-CELERY_BACKEND = env.str("CELERY_BACKEND", default="rpc://guest:guest@rabbitmq/")
+CELERY_BROKER = env.str("CELERY_BROKER", default="pyamqp://guest:guest@rabbitmq:5672/")
+CELERY_BACKEND = env.str("CELERY_BACKEND", default="rpc://guest:guest@rabbitmq:5672/")
 
 
 # Internationalization

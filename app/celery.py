@@ -7,8 +7,13 @@ from celery import Celery
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings.dev")
 
+from django.conf import settings
+
+
 app = Celery(
     "mapping_tool",
+    broker=settings.CELERY_BROKER,
+    backend=settings.CELERY_BACKEND,
     # broker="pyamqp://guest:guest@rabbitmq/",
     # backend="rpc://guest:guest@rabbitmq/",
 )

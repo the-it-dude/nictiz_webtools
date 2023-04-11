@@ -113,8 +113,9 @@ class TerminiologieClient:
             if response.status_code != 200:
                 raise TerminologieRequestError(f"Could not fetch ecl results: {response.text}")
             
-            expansion = response.json()["expansion"]        
-            results += expansion["contains"]
+            expansion = response.json()["expansion"]
+            if "contains" in expansion:
+                results += expansion["contains"]
 
             if len(results) < expansion["total"]:
                 results += get_results(session=session, url=url, results=results)

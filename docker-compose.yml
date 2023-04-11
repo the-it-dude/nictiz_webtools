@@ -30,6 +30,8 @@ services:
     - POSTGRES_PASS=${POSTGRES_PASS}
     - POSTGRES_DB=${POSTGRES_DB}
     - POSTGRES_HOST=postgres
+    - ALLOWED_HOSTS=localhost:9123
+    - CORS_ORIGIN_ALLOW_ALL=True
     - TERMINOLOGIE_USERNAME=${TERMINOLOGIE_USERNAME}
     - TERMINOLOGIE_PASSWORD=${TERMINOLOGIE_PASSWORD}
     - mapping_api_secret=${mapping_api_secret}

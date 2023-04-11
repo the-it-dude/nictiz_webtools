@@ -53,7 +53,7 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query.save()
 
     # Remove all concepts from DB.
-    current_query.concepts.delete()
+    current_query.concepts.all().delete()
 
     client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
     result = {"concepts": {}, "numResults": 0}
