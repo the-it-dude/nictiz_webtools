@@ -27,7 +27,7 @@ services:
     - PYTHONPATH=/webserver
     - DJANGO_SECRET=${DJANGO_SECRET}
     - POSTGRES_USER=${POSTGRES_USER}
-    - POSTGRES_PASS=${POSTRES_PASS}
+    - POSTGRES_PASS=${POSTGRES_PASS}
     - POSTGRES_DB=${POSTGRES_DB}
     - POSTGRES_HOST=postgres
     - TERMINOLOGIE_USERNAME=${TERMINOLOGIE_USERNAME}
@@ -49,7 +49,7 @@ services:
     restart: always
   ## RabbitMQ as message queue for Celery
   rabbitmq:
-    image: rabbitmq:3.7-alpine
+    image: rabbitmq
   celery_worker:
     # Copy template from service Python
     <<: *python
