@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Managing dependencies &mdash; Nictiz Webtools API 0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Development" href="development.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Nictiz Webtools API
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Managing  dependencies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#all-dependencies-development-mode"><em>ALL</em> dependencies (development mode)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#base-dependencies">Base Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#production-dependencies">Production Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development-excluding-documentation">Development (excluding documentation)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#documentation-only">Documentation only</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Nictiz Webtools API</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Managing  dependencies</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/managing_dependencies.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="managing-dependencies">
+<h1>Managing  dependencies<a class="headerlink" href="#managing-dependencies" title="Permalink to this heading"></a></h1>
+<p>System performs automatic checks on dependecy changes via CI.</p>
+<p>Dependencies are split into 4 files: <cite>base</cite>, <cite>dev</cite>, <cite>prod</cite>, <cite>docs</cite> and stored in <cite>app/requirements</cite> folder.</p>
+<p>Depency description files can be built, updated and installed using following <cite>make</cite> commands:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>make deps</cite> - development</p></li>
+<li><p><cite>make deps-base</cite> - base dependencies only</p></li>
+<li><p><cite>make deps-prod</cite> - production dependencies</p></li>
+<li><p><cite>make deps-dev</cite> - development dependencies</p></li>
+<li><p><cite>make deps-docs</cite> - documentation dependencies</p></li>
+</ul>
+</div></blockquote>
+<p>In order to add new dependency into project - update related file and add new line with <a class="reference external" href="https://pypi.com">pypi</a> dependency name or git dependency using <cite>-e git+ssh://…</cite> format, then run related <cite>make deps</cite> command.</p>
+<p>Every file in <cite>app/requirements/*.in</cite> will be transformed into <cite>pip</cite> compatible <cite>requirements.txt</cite> file and stored with related name in same folder to be later used by docker or make commands for installation purposes.</p>
+<section id="all-dependencies-development-mode">
+<h2><em>ALL</em> dependencies (development mode)<a class="headerlink" href="#all-dependencies-development-mode" title="Permalink to this heading"></a></h2>
+<p>In order to install <em>all</em> project dependencies developers can use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">deps</span>
+</pre></div>
+</div>
+<p>This command will run <cite>make deps-base &amp;&amp; make deps-prod &amp;&amp; make deps-dev &amp;&amp; make deps-docs</cite> sequence.</p>
+</section>
+<section id="base-dependencies">
+<h2>Base Dependencies<a class="headerlink" href="#base-dependencies" title="Permalink to this heading"></a></h2>
+<p>Base dependencies contain everything required for normal operation of this project.</p>
+<p>Related file: <cite>app/requirements/base.in</cite></p>
+<p>Dependencies can be updated using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">deps</span><span class="o">-</span><span class="n">base</span>
+</pre></div>
+</div>
+</section>
+<section id="production-dependencies">
+<h2>Production Dependencies<a class="headerlink" href="#production-dependencies" title="Permalink to this heading"></a></h2>
+<p>Production dependencies contain packages related to project deployment (e.g. Sentry integration and Gunicorn webserver).</p>
+<p>Dependencies stored in <cite>app/requirements/prod.in</cite>.</p>
+<p>File includes base dependencies as Production image is built using <cite>app/requirements/prod.txt</cite>, output from:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">deps</span><span class="o">-</span><span class="n">prod</span>
+</pre></div>
+</div>
+</section>
+<section id="development-excluding-documentation">
+<h2>Development (excluding documentation)<a class="headerlink" href="#development-excluding-documentation" title="Permalink to this heading"></a></h2>
+<p>Development dependencies are stored in <cite>app/requirements/dev.in</cite> and contain everything needed for development and debugging of the project.</p>
+<p>These dependencies can be updated using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">deps</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
+</div>
+</section>
+<section id="documentation-only">
+<h2>Documentation only<a class="headerlink" href="#documentation-only" title="Permalink to this heading"></a></h2>
+<p>Documentation dependencies are residing in <cite>app/requirements/docs.in</cite></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="development.html" class="btn btn-neutral float-left" title="Development" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Nictiz B.V.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
