@@ -60,6 +60,7 @@ jobs:
           make build-docs
           cd docs/build/html
           ln -s index.html 404.html
+          echo '${{ vars.GH_PAGES_CNAME }}' > CNAME
           git config --global user.email "${{ vars.GH_EMAIL }}"
           git config --global user.name "${{ vars.GH_NAME }}"
           git init
