@@ -5,8 +5,10 @@ on:
     branches:
       - "main"
       - "cleanup_1"
+      - "docs"
 
 env:
+  DOCS_TAG: ${{ secrets.DOCKERHUB_REGISTRY }}/darth/nictiz_webtools:docs
   TEST_TAG: ${{ secrets.DOCKERHUB_REGISTRY }}/darth/nictiz_webtools:test
   LATEST_TAG: ${{ secrets.DOCKERHUB_REGISTRY }}/darth/nictiz_webtools:latest
   DJANGO_SECRET: "thetest"
@@ -59,4 +61,13 @@ jobs:
           file: docker/prod/python/Dockerfile
           push: true
           tags: ${{ env.LATEST_TAG }}
-
+        run: |
+          make build-docs
+          cd docs/build/html
+          ln -s index.html 404.html
+          git config --global user.email "${{ vars.GH_EMAIL }}"
+          git config --global user.name "${{ vars.GH_NAME }}"
+          git init
+          git add -A
+          git commit -m 'Deployment.'
+          git push -f https://${{ vars.GH_USERNAME }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ vars.GH_PUSH_REPO }}.git master:gh-pages
