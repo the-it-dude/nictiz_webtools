@@ -45,7 +45,7 @@ class MappingTaskTargetsView(TaskRelatedView, ListCreateAPIView):
         return (
             MappingRule.objects.filter(
                 project_id=task.project_id,
-                # target_component=task.source_component,
+                target_component=task.source_component,
             )
             .select_related(
                 "source_component",
