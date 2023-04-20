@@ -2,7 +2,7 @@ import json
 import logging
 
 from django.conf import settings
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 import django_filters.rest_framework
 from rest_framework import permissions, viewsets
 from rest_framework import filters

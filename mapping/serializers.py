@@ -131,7 +131,7 @@ class MappingECLConceptExclusionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MappingECLConcept
-        fields = ("key", "component")
+        fields = ("key", "fsn", "component")
 
     key = serializers.CharField(source="code")
     component = MappingCodesystemComponentSerializer(source="task.source_component")

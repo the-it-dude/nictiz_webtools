@@ -1,11 +1,11 @@
 from django.db.models import Count
+import django_filters.rest_framework
 from rest_framework import filters
 from rest_framework.generics import ListAPIView, ListCreateAPIView
 
 from mapping.models import (
     MappingECLConcept,
     MappingEclPart,
-    MappingEclPartExclusion,
     MappingRule,
     MappingTask,
 )
@@ -32,11 +32,24 @@ class MappingTaskTargetsView(TaskRelatedView, ListCreateAPIView):
     """List and create mapping targets (MappingRules)."""
 
     serializer_class = MappingRuleSerializer
-    filter_backends = [filters.OrderingFilter]
+    filter_backends = [
+        filters.OrderingFilter,
+        filters.SearchFilter,
+        django_filters.rest_framework.DjangoFilterBackend
+    ]
+
     ordering_fields = [
         "source_component__component_id",
         "source_component__component_title",
         "mapcorrelation",
+    ]
+    filterset_fields = [
+        "source_component__component_title",
+        "source_component__component_id"
+    ]
+    search_fields = [
+        "^source_component__component_id",
+        "^source_component__component_title"
     ]
 
     def get_queryset(self):
@@ -68,7 +81,7 @@ class MappingTaskExclusionsView(TaskRelatedView, ListAPIView):
         components = [] if task.exclusions is None else task.exclusions
 
         queryset = MappingECLConcept.objects.filter(
-            task__project_id=task.project_id_id,
+            task=task,
             task__source_component__component_id__in=components,
         ).select_related("task", "task__source_component")
         return queryset
@@ -92,8 +105,15 @@ class MappingECLConceptsView(TaskRelatedView, ListAPIView):
     """List All results for a given MappingECLPart."""
 
     serializer_class = MappingECLConceptSerializer
+    filter_backends = [filters.SearchFilter, django_filters.rest_framework.DjangoFilterBackend]
+
+    filterset_fields = ["code", "ecl_id"]
+    search_fields = ["^id", "^code"]
 
     def get_queryset(self):
+        task = MappingTask.objects.get(pk=self.kwargs["task_pk"])
+        exclusions = [] if task.exclusions is None else task.exclusions
+
         return MappingECLConcept.objects.filter(
             task_id=self.kwargs["task_pk"]
-        ).select_related("ecl")
+        ).exclude(task__source_component__component_id__in=exclusions).select_related("ecl")

@@ -1313,7 +1313,8 @@ class MappingRemoveRules(viewsets.ViewSet):
         current_user = User.objects.get(id=request.user.id)
         if (
             MappingProject.objects.get(
-                id=task.project_id.id, access__username=current_user
+                id=task.project_id.id,
+                access__username=current_user
             )
         ) and (task.user == current_user):
             print(request.user, "Removing mapping rules associated with task", str(pk))
