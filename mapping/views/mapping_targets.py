@@ -4,6 +4,7 @@ from rest_framework import filters
 from rest_framework.generics import ListAPIView, ListCreateAPIView
 
 from mapping.models import (
+    MappingCodesystemComponent,
     MappingECLConcept,
     MappingEclPart,
     MappingRule,
@@ -76,12 +77,14 @@ class MappingTaskExclusionsView(TaskRelatedView, ListAPIView):
     serializer_class = MappingECLConceptExclusionSerializer
 
     def get_queryset(self):
-        task = MappingTask.objects.get(pk=self.kwargs["task_pk"])
+        task = MappingTask.objects.select_related("source_component").get(pk=self.kwargs["task_pk"])
         # Filter empty and incorrect components.
+
         components = [] if task.exclusions is None else task.exclusions
 
         queryset = MappingECLConcept.objects.filter(
-            task=task,
+            task__project_id=task.project_id_id,
+            task__source_component__codesystem_id_id=task.source_component.codesystem_id_id,
             task__source_component__component_id__in=components,
         ).select_related("task", "task__source_component")
         return queryset
@@ -111,9 +114,16 @@ class MappingECLConceptsView(TaskRelatedView, ListAPIView):
     search_fields = ["^id", "^code"]
 
     def get_queryset(self):
-        task = MappingTask.objects.get(pk=self.kwargs["task_pk"])
-        exclusions = [] if task.exclusions is None else task.exclusions
+        task = MappingTask.objects.select_related("source_component").get(pk=self.kwargs["task_pk"])
+
+        exclusions = MappingECLConcept.objects.filter(
+            task__project_id=task.project_id_id,
+            task__source_component__codesystem_id_id=task.source_component.codesystem_id_id,
+            task__source_component__component_id__in=[] if task.exclusions is None else task.exclusions,
+        ).values_list("code", flat=True)
 
         return MappingECLConcept.objects.filter(
             task_id=self.kwargs["task_pk"]
-        ).exclude(task__source_component__component_id__in=exclusions).select_related("ecl")
+        ).exclude(
+            code__in=exclusions
+        ).select_related("ecl")
