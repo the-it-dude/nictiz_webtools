@@ -80,12 +80,15 @@ class MappingTaskExclusionsView(TaskRelatedView, ListAPIView):
         task = MappingTask.objects.select_related("source_component").get(pk=self.kwargs["task_pk"])
         # Filter empty and incorrect components.
 
-        components = [] if task.exclusions is None else task.exclusions
-
-        queryset = MappingECLConcept.objects.filter(
+        exclusions = MappingECLConcept.objects.filter(
             task__project_id=task.project_id_id,
             task__source_component__codesystem_id_id=task.source_component.codesystem_id_id,
-            task__source_component__component_id__in=components,
+            task__source_component__component_id__in=[] if task.exclusions is None else task.exclusions,
+        ).values_list("code", flat=True)
+
+        queryset = MappingECLConcept.objects.filter(
+            task=task,
+            code__in=exclusions
         ).select_related("task", "task__source_component")
         return queryset
 
