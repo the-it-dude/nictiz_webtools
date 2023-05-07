@@ -412,6 +412,7 @@ class MappingExclusions(viewsets.ViewSet):
                 if exclusions.count() > 1:
                     # if so: delete
                     exclusions.delete()
+
                 # Select or create a new one
                 obj, created = MappingEclPartExclusion.objects.get_or_create(task=task)
 
@@ -421,6 +422,10 @@ class MappingExclusions(viewsets.ViewSet):
                     .get("string")
                     .split("\n")
                 )
+
+                task.exclusions = sorted([e.strip() for e in exclusion_list])
+                task.save()
+
                 obj.components = sorted(exclusion_list)
                 obj.save()
                 print(obj, created)
