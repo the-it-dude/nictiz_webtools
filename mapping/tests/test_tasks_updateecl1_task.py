@@ -2,8 +2,8 @@ import json
 from unittest import mock
 from django.test import TestCase
 
-from mapping.factories import MappingECLPartFactory
-from mapping.tasks import UpdateECL1Task
+from mapping.factories import MappingECLConceptFactory, MappingECLPartFactory
+from mapping.tasks import UpdateECL1Task, update_ecl_task
 
 
 class UpdateECL1TaskTestCase(TestCase):
@@ -338,3 +338,116 @@ class UpdateECL1TaskTestCase(TestCase):
                 },
             },
         )
+
+    @mock.patch("mapping.tasks.tasks.TerminiologieClient")
+    def test_update_ecl_task_saving_all_new_concepts(self, term_client):
+        term_client.return_value.expand_snomed_ecl_valueset.return_value = [
+            {
+                "code": "9847008",
+                "moduleId": "900000000000207008",
+                "system": "test1",
+            }
+        ]
+
+        term_client.return_value.lookup_code.return_value = {
+            "parameter": {}
+        }
+        term_client.return_value.params_to_dict.return_value = {
+            "nl:900000000000003001": "structuur van hilum van bijnier (lichaamsstructuur)",
+            "nl:preferredForLanguage": "structuur van hilum van bijnier",
+            "en:display": "structuur van hilum van bijnier",
+        }
+        term_client.return_value.expanded_data_to_snowstorm_mapping.return_value = {
+            "id": "9847008",
+            "conceptId": "9847008",
+            "moduleId": "900000000000207008",
+            "effectiveTime": "20020131",
+            "definitionStatus": "PRIMITIVE",
+            "idAndFsnTerm": "9847008 | structuur van hilum van bijnier",
+            "active": True,
+            "fsn": {
+                "lang": "en",
+                "term": "structuur van hilum van bijnier (lichaamsstructuur)"
+            },
+            "pt": {
+                "lang": "en",
+                "term": "structuur van hilum van bijnier"
+            },
+        }
+
+        ecl_part = MappingECLPartFactory()
+        update_ecl_task(record_id=ecl_part.pk, query="test")
+
+        self.assertEqual(ecl_part.concepts.count(), 1)
+        concept = ecl_part.concepts.first()
+        self.assertTrue(concept.is_new)
+
+    @mock.patch("mapping.tasks.tasks.TerminiologieClient")
+    def test_update_ecl_task_marking_concepts_as_existing(self, term_client):
+        term_client.return_value.expand_snomed_ecl_valueset.return_value = [
+            {
+                "code": "9847008",
+                "moduleId": "900000000000207008",
+                "system": "test1",
+            }
+        ]
+
+        term_client.return_value.lookup_code.return_value = {
+            "parameter": {}
+        }
+        term_client.return_value.params_to_dict.return_value = {
+            "nl:900000000000003001": "structuur van hilum van bijnier (lichaamsstructuur)",
+            "nl:preferredForLanguage": "structuur van hilum van bijnier",
+            "en:display": "structuur van hilum van bijnier",
+        }
+        term_client.return_value.expanded_data_to_snowstorm_mapping.return_value = {
+            "id": "9847008",
+            "conceptId": "9847008",
+            "moduleId": "900000000000207008",
+            "effectiveTime": "20020131",
+            "definitionStatus": "PRIMITIVE",
+            "idAndFsnTerm": "9847008 | structuur van hilum van bijnier",
+            "active": True,
+            "fsn": {
+                "lang": "en",
+                "term": "structuur van hilum van bijnier (lichaamsstructuur)"
+            },
+            "pt": {
+                "lang": "en",
+                "term": "structuur van hilum van bijnier"
+            },
+        }
+
+        ecl_part = MappingECLPartFactory()
+        concept = MappingECLConceptFactory(ecl=ecl_part, task=ecl_part.task, code="9847008", is_new=True)
+
+        update_ecl_task(record_id=ecl_part.pk, query="test")
+        self.assertEqual(ecl_part.concepts.count(), 1)
+
+        concept.refresh_from_db()
+        self.assertFalse(concept.is_new)
+
+    @mock.patch("mapping.tasks.tasks.TerminiologieClient")
+    def test_update_ecl_task_marking_concepts_as_deleted(self, term_client):
+        term_client.return_value.expand_snomed_ecl_valueset.return_value = [
+        ]
+
+        ecl_part = MappingECLPartFactory()
+        concept = MappingECLConceptFactory(ecl=ecl_part, task=ecl_part.task)
+        self.assertEqual(ecl_part.concepts.count(), 1)
+
+        update_ecl_task(record_id=ecl_part.pk, query="test")
+        concept.refresh_from_db()
+        self.assertTrue(concept.is_deleted)
+
+
+    @mock.patch("mapping.tasks.tasks.TerminiologieClient")
+    def test_update_ecl_task_removing_marked_for_deletion_concepts(self, term_client):
+        term_client.return_value.expand_snomed_ecl_valueset.return_value = [
+        ]
+
+        ecl_part = MappingECLPartFactory()
+        MappingECLConceptFactory(ecl=ecl_part, task=ecl_part.task, is_deleted=True)
+        self.assertEqual(ecl_part.concepts.count(), 1)
+        update_ecl_task(record_id=ecl_part.pk, query="test")
+        self.assertEqual(ecl_part.concepts.count(), 0)

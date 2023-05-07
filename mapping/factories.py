@@ -5,6 +5,7 @@ from mapping.models import (
     MappingCodesystem,
     MappingCodesystemComponent,
     MappingEclPart,
+    MappingECLConcept,
     MappingProject,
     MappingTask,
     MappingTaskStatus,
@@ -75,3 +76,14 @@ class MappingECLPartFactory(factory.django.DjangoModelFactory):
 
     task = factory.SubFactory(MappingTaskFactory)
     mapcorrelation = RuleCorrelations.exact_match.value
+
+
+class MappingECLConceptFactory(factory.django.DjangoModelFactory):
+    """Mapping ECL Concept Factory."""
+
+    class Meta:
+        model = MappingECLConcept
+
+    task = factory.SubFactory(MappingTaskFactory)
+    ecl = factory.SubFactory(MappingECLPartFactory, task=factory.SelfAttribute("..task"))
+    active = True

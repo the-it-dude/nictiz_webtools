@@ -52,8 +52,13 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query.failed = False
     current_query.save()
 
-    # Remove all concepts from DB.
-    current_query.concepts.all().delete()
+    # Remove all concepts marked for deletion from DB.
+    current_query.concepts.filter(is_deleted=True).delete()
+    # Remove "new" mark from all existing concepts.
+    current_query.concepts.filter(is_new=True).update(is_new=False)
+
+    existing_codes = current_query.concepts.values_list("code", flat=True)
+    codes_found = []
 
     client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
     result = {"concepts": {}, "numResults": 0}
@@ -89,15 +94,23 @@ def update_ecl_task(record_id: int, query: str) -> str:
     current_query.save()
     if not current_query.failed:
         # Create results in db.
-
         concepts = []
         for concept in result["concepts"].values():
-            concepts.append(
-                MappingECLConcept.from_part_result(
-                    ecl_part=current_query, result=concept
+            code = concept["id"]
+            if code in existing_codes:
+                codes_found.append(code)
+            else:
+                concepts.append(
+                    MappingECLConcept.from_part_result(
+                        ecl_part=current_query, result=concept
+                    )
                 )
-            )
         MappingECLConcept.objects.bulk_create(concepts)
+
+        codes_diff = set(existing_codes) - set(codes_found)
+        if codes_diff:
+            # Mark codes not in new set as deleted.
+            current_query.concepts.filter(code__in=codes_diff).update(is_deleted=True)
 
     return str(current_query)
 
