@@ -10,10 +10,13 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 SESSION_COOKIE_DOMAIN = "localhost"
 CSRF_COOKIE_DOMAIN = 'localhost'
 
-
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080"
+]
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:9123",
-    "http://127.0.0.1:9123"
+    "http://127.0.0.1:9123",
+    "http://localhost:8080",
 ]
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_SUPPORTS_CREDENTIALS = True

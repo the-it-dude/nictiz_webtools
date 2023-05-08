@@ -129,4 +129,4 @@ class MappingECLConceptsView(TaskRelatedView, ListAPIView):
             task_id=self.kwargs["task_pk"]
         ).exclude(
             code__in=exclusions
-        ).select_related("ecl")
+        ).select_related("ecl").order_by("is_new", "is_deleted", "ecl_id")
