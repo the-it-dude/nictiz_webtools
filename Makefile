@@ -23,7 +23,7 @@ install:
 	pip install -r app/requirements/dev.txt
 
 serve:
-	python manage.py runserver
+	DJANGO_SETTINGS_MODULE=app.settings.dev python manage.py runserver 0.0.0.0:8000
 
 test:
 	pytest --ds=app.settings.test
