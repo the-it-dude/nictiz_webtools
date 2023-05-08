@@ -1,16 +1,10 @@
 # Create your tasks here
 from __future__ import absolute_import, unicode_literals
 
-import environ
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from mapping.models import *
-
-# Import environment variables
-env = environ.Env(DEBUG=(bool, False))
-# reading .env file
-environ.Env.read_env(env.str("ENV_PATH", ".env"))
 
 logger = get_task_logger(__name__)
 
@@ -48,6 +42,10 @@ def createRulesFromEcl(taskid):
                 .order_by("id")
             )
 
+            # Clean up ECL Concepts marked for deletion.
+            MappingECLConcept.objects.filter(task=task, is_deleted=True).delete()
+            MappingECLConcept.objects.filter(task=task, is_new=True).update(is_new=False)
+
             # Set queries to in progress
             queries.export_finished = False
 
@@ -55,10 +53,9 @@ def createRulesFromEcl(taskid):
             exclude_componentIDs = []
             excluded_componentIDs = []
             try:
-                obj = MappingEclPartExclusion.objects.get(task=task)
                 components = MappingCodesystemComponent.objects.filter(
-                    codesystem_id=obj.task.source_component.codesystem_id,
-                    component_id__in=list(obj.components),
+                    codesystem_id=task.source_component.codesystem_id,
+                    component_id__in=task.exclusions,
                 )
                 # Loop components
                 for component in components:

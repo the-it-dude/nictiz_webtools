@@ -155,6 +155,7 @@ class MappingECLConceptSerializer(serializers.ModelSerializer):
             "query",
             "description",
             "correlation",
+            "status",
         )
 
     moduleId = serializers.CharField(source="module_id")
@@ -167,6 +168,7 @@ class MappingECLConceptSerializer(serializers.ModelSerializer):
     query = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     correlation = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     def get_pt(self, obj: MappingECLConcept) -> dict:
         """Get dictionary to represent legacy data as `pt` dictionary."""
@@ -193,3 +195,12 @@ class MappingECLConceptSerializer(serializers.ModelSerializer):
     def get_correlation(self, obj: MappingECLConcept) -> str:
         """Get Query correlation."""
         return obj.ecl.mapcorrelation
+
+    def get_status(self, obj: MappingECLConcept) -> str:
+        """Get Concept Status."""
+        status = "existing"
+        if obj.is_new:
+            status = "new"
+        if obj.is_deleted:
+            status = "deleted"
+        return status

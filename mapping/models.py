@@ -363,6 +363,8 @@ class MappingECLConcept(models.Model):
     pt_lang = models.CharField(max_length=2)
     fsn = models.TextField()
     fsn_lang = models.CharField(max_length=2)
+    is_new = models.BooleanField(null=True)
+    is_deleted = models.BooleanField(null=True)
 
     objects = models.Manager()
 
@@ -385,6 +387,7 @@ class MappingECLConcept(models.Model):
             pt_lang=result["pt"]["lang"],
             fsn=result["fsn"]["term"],
             fsn_lang=result["fsn"]["lang"],
+            is_new=True,
         )
 
 
