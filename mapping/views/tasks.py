@@ -194,7 +194,7 @@ class ProjectTasklist(ListAPIView):
     serializer_class = MappingTaskSerializer
     filter_backends = [filters.SearchFilter, django_filters.rest_framework.DjangoFilterBackend]
     filterset_fields = ["id", "category", "user", "status"]
-    search_fields = ["^id"]
+    search_fields = ["^id", "^source_component__component_title", "^source_component__component_id"]
 
     def get_queryset(self):
         pk = self.kwargs["project_pk"]
