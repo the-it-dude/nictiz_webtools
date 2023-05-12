@@ -198,19 +198,7 @@ def createRulesForAllTasks(project_id=False, all_tasks=False):
 
     # Check if there are rules present
     for task in tasks:
-        rules = MappingRule.objects.filter(
-            project_id=task.project_id,
-            target_component=task.source_component,
-        ).count()
-
-        # If rules present, run createRulesFromEcl
-        if (all_tasks) or (rules > 0):
-            # logger.info(f"[{task.id}] Found {rules} rules for task {task.id}. -> Creating rules")
-            createRulesFromEcl.delay(task.id)
-            # logger.info(f"[{task.id}] Finished creating {rules} rules for task {task.id}.")
-        else:
-            # logger.info(f"Found {rules} rules for task {task.id}. -> Not creating rules")
-            continue
+        createRulesFromEcl.delay(task.id)
 
     print("Task createRulesForAllTasks finished by celery")
 
