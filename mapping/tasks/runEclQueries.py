@@ -22,7 +22,7 @@ def runAllEclQueriesInProject(projectid):
         # Get all ECL queries for the task
         queries = MappingEclPart.objects.filter(task=task)
         for query in queries:
-            update_ecl_task.delay(record_id=query.id, query=query.query)
+            update_ecl_task.delay(record_id=query.id, query=query.query, create_audit=True)
     logger.info("[runAllEclQueriesInProject] Finished")
 
     return True

@@ -14,6 +14,7 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from pandas import read_csv, read_excel
 
+from mapping.enums import AuditTypes
 from mapping.models import *
 from terminologieserver.client import TerminiologieClient, TerminologieRequestError
 
@@ -32,12 +33,15 @@ REQUEST_RETRY_SLEEP_TIME = 10
 
 
 @shared_task
-def update_ecl_task(record_id: int, query: str) -> str:
+def update_ecl_task(
+    record_id: int, query: str, create_audit: typing.Optional[bool] = None
+) -> str:
     """Update ECL Task by performing ECL query using Telemetrie client.
 
     Args:
         record_id (int): MappingEclPart ID.
         query (str): ECL Query string
+        create_audit (Optional[bool]): Create audit record for query with no results.
 
     Returns:
         string representation of query result.
@@ -111,6 +115,13 @@ def update_ecl_task(record_id: int, query: str) -> str:
         if codes_diff:
             # Mark codes not in new set as deleted.
             current_query.concepts.filter(code__in=codes_diff).update(is_deleted=True)
+        if len(concepts) == 0 and create_audit:
+            # Create audit record identifying issue with query.
+            MappingTaskAudit.objects.get_or_create(
+                task=current_query.task,
+                audit_type=AuditTypes.empty_query,
+                hit_reason=f"{current_query.id} geeft geen resultaten.",
+            )
 
     return str(current_query)
 
@@ -524,63 +535,6 @@ def import_labcodeset_async():
             # i+=1
             # if i>10:
             #     break
-
-
-@shared_task
-def add_mappings_ecl_1_task(task=None, query=False, preview=False):
-    if query != False:
-        if preview == True:
-            print("Preview run task add_mappings_ecl_1_task")
-            snowstorm = Snowstorm(
-                baseUrl="https://snowstorm.test-nictiz.nl",
-                defaultBranchPath="MAIN/SNOMEDCT-NL",
-                debug=True,
-            )
-            results = snowstorm.findConcepts(ecl=query)
-            return results
-        else:
-            print("Production run task add_mappings_ecl_1_task")
-            # Delete existing rules
-            task = MappingTask.objects.get(id=task)
-            rules = MappingRule.objects.filter(
-                target_component=task.source_component, project_id=task.project_id
-            )
-            print(rules)
-            rules.delete()
-            snowstorm = Snowstorm(
-                baseUrl="https://snowstorm.test-nictiz.nl",
-                defaultBranchPath="MAIN/SNOMEDCT-NL",
-                debug=True,
-            )
-            results = snowstorm.findConcepts(ecl=query)
-            for result in results.values():
-                # Snomed is hardcoded id 1. TODO - make this flexible
-                source = MappingCodesystemComponent.objects.get(
-                    component_id=result.get("conceptId"),
-                    codesystem_id="1",
-                )
-                obj, created = MappingRule.objects.get_or_create(
-                    project_id=task.project_id,
-                    source_component=source,
-                    target_component=task.source_component,
-                    active=True,
-                )
-                print(
-                    "Created SNOMED mapping {source} to {target}".format(
-                        source=source,
-                        target=task.source_component,
-                    )
-                )
-            return results
-    else:
-        print("Query false -> delete en stop")
-        # Delete existing rules
-        task = MappingTask.objects.get(id=task)
-        rules = MappingRule.objects.filter(
-            target_component=task.source_component, project_id=task.project_id
-        )
-        rules.delete()
-        return {}
 
 
 @shared_task

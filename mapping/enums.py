@@ -74,3 +74,41 @@ class RCStatus(enum.Enum):
             (RCStatus.retired.value, 'Retired'),
             (RCStatus.unknown.value, 'Unknown'),
         ]
+
+
+class AuditTypes(enum.Enum):
+    veto = 'AUDIT_VETO'
+    advice_error = 'Advice error'
+    deprecated_source = 'Deprecated source'
+    deprecated_target = 'Deprecated target'
+    duplicate_rule = 'ECL - duplicate mapping rule'
+    import_type = 'IMPORT'
+    maps_to_self = 'Maps to self'
+    mismatch_ecl_vs_rules = 'Mismatch ECL vs rules'
+    missing_target = 'Missing target'
+    priority_error = 'Priority error'
+    target_used_in_multiple_tasks = 'Target used in multiple tasks'
+    ecl_recursive_exclusion = 'ecl_recursive_exclusion'
+    multiple_mapping = 'multiple_mapping'
+    nhg_lonic_order = 'nhg_loinc_order_vs_observation'
+    empty_query = 'Empty ECL Query'
+
+    @classmethod
+    def choices(cls):
+        return [
+            (AuditTypes.veto, 'AUDIT_VETO'),
+            (AuditTypes.advice_error, 'Advice error'),
+            (AuditTypes.deprecated_source, 'Deprecated source'),
+            (AuditTypes.deprecated_target, 'Deprecated target'),
+            (AuditTypes.duplicate_rule, 'ECL - duplicate mapping rule'),
+            (AuditTypes.import_type, 'IMPORT'),
+            (AuditTypes.maps_to_self, 'Maps to self'),
+            (AuditTypes.mismatch_ecl_vs_rules, 'Mismatch ECL vs rules'),
+            (AuditTypes.missing_target, 'Missing target'),
+            (AuditTypes.priority_error, 'Priority error'),
+            (AuditTypes.target_used_in_multiple_tasks, 'Target used in multiple tasks'),
+            (AuditTypes.ecl_recursive_exclusion, 'ecl_recursive_exclusion'),
+            (AuditTypes.multiple_mapping, 'multiple_mapping'),
+            (AuditTypes.nhg_lonic_order, 'nhg_loinc_order_vs_observation'),
+            (AuditTypes.empty_query, 'Empty ECL Query')
+        ]
