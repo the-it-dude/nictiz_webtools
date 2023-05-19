@@ -174,7 +174,7 @@ class MappingProject(models.Model):
 
     def __str__(self):
         return str(self.id) + " " + str(self.title)
-3
+
 
 class MappingTaskStatus(models.Model):
     """Mapping Task Status."""
