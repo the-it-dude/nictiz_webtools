@@ -393,8 +393,6 @@ class MappingECLConcept(models.Model):
 
 class MappingEclPartExclusion(models.Model):
     """
-    DEPRECATED. Use task.exclusion.
-
     Mapping ECL Part Exclusions.
 
     For use with the vue mapping tooling
@@ -465,6 +463,26 @@ class MappingProgressRecord(models.Model):
 
     def __str__(self):
         return f"{self.id} {self.project} {self.name}"
+
+
+class MappingProjectAudit(models.Model):
+    """Mapping Project Audit Record."""
+
+    audit_type = models.TextField()
+    project = models.ForeignKey(MappingProject, on_delete=models.PROTECT)
+    hit_reason = models.TextField(default=None, blank=True, null=True)
+    comment = models.TextField(default=None, blank=True, null=True)
+    ignore = models.BooleanField(default=False)  # Whitelist
+    sticky = models.BooleanField(
+        default=False
+    )  # True = will not be removed with each audit cycle
+    ignore_user = models.ForeignKey(  # User adding the whitelist
+        User, default=None, blank=True, null=True, on_delete=models.PROTECT
+    )
+    first_hit_time = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.project} {self.id} {self.audit_type}"
 
 
 class MappingTaskAudit(models.Model):

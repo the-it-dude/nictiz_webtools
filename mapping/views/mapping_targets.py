@@ -4,10 +4,10 @@ from rest_framework import filters
 from rest_framework.generics import ListAPIView, ListCreateAPIView
 
 from mapping.models import (
-    MappingCodesystemComponent,
     MappingECLConcept,
     MappingEclPart,
     MappingEclPartExclusion,
+    MappingProjectAudit,
     MappingRule,
     MappingTask,
 )
@@ -19,6 +19,7 @@ from mapping.serializers import (
     MappingECLConceptExclusionSerializer,
     MappingECLConceptSerializer,
     MappingECLPartSerializer,
+    MappingProjectAuditSerializer,
     MappingRuleSerializer,
 )
 
@@ -107,7 +108,6 @@ class MappingTaskECLPartsView(TaskRelatedView, ListCreateAPIView):
         )
 
 
-
 class MappingECLConceptsView(TaskRelatedView, ListAPIView):
     """List All results for a given MappingECLPart."""
 
@@ -140,3 +140,13 @@ class MappingECLConceptsView(TaskRelatedView, ListAPIView):
         ).exclude(
             code__in=exclusions
         ).select_related("ecl").order_by("is_new", "is_deleted", "ecl_id")
+
+
+class MappingProjectAuditListAPIView(ListAPIView):
+    serializer_class = MappingProjectAuditSerializer
+    permission_classes = [
+        MappingProjectAccessPermission,
+    ]
+
+    def get_queryset(self):
+        return MappingProjectAudit.objects.filter(project_id=self.kwargs["project_pk"])

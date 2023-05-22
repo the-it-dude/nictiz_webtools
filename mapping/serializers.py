@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from mapping.models import (
-    MappingEclPartExclusion,
     MappingTask,
     MappingCodesystemComponent,
     MappingCodesystem,
@@ -9,6 +8,7 @@ from mapping.models import (
     MappingRule,
     MappingEclPart,
     MappingECLConcept,
+    MappingProjectAudit,
 )
 
 
@@ -204,3 +204,20 @@ class MappingECLConceptSerializer(serializers.ModelSerializer):
         if obj.is_deleted:
             status = "deleted"
         return status
+
+class MappingProjectAuditSerializer(serializers.ModelSerializer):
+    """Mapping Project Audit serializer."""
+
+    class Meta:
+        model = MappingProjectAudit
+        fields = (
+            "id",
+            "project_id",
+            "audit_type",
+            "hit_reason",
+            "comment",
+            "ignore",
+            "ignore_user",
+            "sticky",
+            "first_hit_time"
+        )

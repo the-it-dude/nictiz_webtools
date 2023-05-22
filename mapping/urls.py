@@ -199,6 +199,11 @@ urlpatterns = [
         views.MappingProjectUsers.as_view(),
         name="project_users",
     ),
+    path(
+        r"api/1.0/projects/<int:project_pk>/audits/",
+        views.MappingProjectAuditListAPIView.as_view(),
+        name="project_audits",
+    ),
 
     # Legacy
     path(

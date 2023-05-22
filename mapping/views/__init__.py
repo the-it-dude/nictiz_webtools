@@ -4,11 +4,12 @@ from .abstract_export import *
 from .audits import *
 from .comments import *
 from .mapping_targets import (
-    MappingECLConceptsView,  # noqa: F401
+    MappingProjectAuditListAPIView,
+    MappingECLConceptsView,
     MappingTaskECLPartsView,
     MappingTaskExclusionsView,
     MappingTaskTargetsView,
-)
+)  # noqa: F401
 from .mappings import *
 from .progressreport import *
 from .projects import *

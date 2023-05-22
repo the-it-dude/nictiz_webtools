@@ -112,3 +112,13 @@ class AuditTypes(enum.Enum):
             (AuditTypes.nhg_lonic_order, 'nhg_loinc_order_vs_observation'),
             (AuditTypes.empty_query, 'Empty ECL Query')
         ]
+
+
+class ProjectAuditTypes(enum.Enum):
+    unmapped_component = "Concept niet gemapt"
+
+    @classmethod
+    def choices(cls):
+        return [
+            (ProjectAuditTypes.unmapped_component, "Concept niet gemapt")
+        ]
