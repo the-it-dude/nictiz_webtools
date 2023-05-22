@@ -1,7 +1,8 @@
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from mapping.models import MappingCodesystemComponent, MappingProject, MappingTask, MappingECLConcept
+from mapping.enums import ProjectAuditTypes
+from mapping.models import MappingCodesystemComponent, MappingProject, MappingProjectAudit, MappingTask, MappingECLConcept
 
 
 @shared_task
@@ -37,9 +38,18 @@ def unmapped_components():
         ).values_list("code", flat=True)
 
     for project in MappingProject.objects.filter(pk=9).all():
+        # Clear all audits.
+        MappingProjectAudit.objects.filter(project=project).exclude(sticky=True).delete()
+
         project_codes = []
         project_tasks = MappingTask.objects.filter(project_id=project).select_related("source_component").prefetch_related("mappingeclpartexclusion_set")
         for task in project_tasks:
             project_codes += get_concept_codes(task=task)
 
-        print(project, len(project_codes), MappingCodesystemComponent.objects.filter(codesystem_id=project.source_codesystem).exclude(component_id__in=project_codes).count())
+        components = MappingCodesystemComponent.objects.filter(codesystem_id=project.source_codesystem).exclude(component_id__in=project_codes)
+        for component in components:
+            MappingProjectAudit.objects.get_or_create(
+                project=project,
+                audit_type=ProjectAuditTypes.unmapped_component.value,
+                hit_reason=f"Concept {component.component_id} is niet gemapt."
+            )

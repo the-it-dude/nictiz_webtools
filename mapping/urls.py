@@ -204,6 +204,11 @@ urlpatterns = [
         views.MappingProjectAuditListAPIView.as_view(),
         name="project_audits",
     ),
+    path(
+        r"api/1.0/projects/<int:project_pk>/audits/<int:hit_id>/",
+        views.MappingProjectAuditListAPIView.as_view(),
+        name="project_audits_update",
+    ),
 
     # Legacy
     path(

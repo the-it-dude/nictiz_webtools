@@ -1,7 +1,8 @@
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 import django_filters.rest_framework
 from rest_framework import filters
-from rest_framework.generics import ListAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView, UpdateAPIView
 
 from mapping.models import (
     MappingECLConcept,
@@ -142,11 +143,21 @@ class MappingECLConceptsView(TaskRelatedView, ListAPIView):
         ).select_related("ecl").order_by("is_new", "is_deleted", "ecl_id")
 
 
-class MappingProjectAuditListAPIView(ListAPIView):
+class MappingProjectAuditListAPIView(ListAPIView, UpdateAPIView):
     serializer_class = MappingProjectAuditSerializer
     permission_classes = [
         MappingProjectAccessPermission,
     ]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, django_filters.rest_framework.DjangoFilterBackend]
+
+    filterset_fields = ["ignore", "hit_reason", "sticky"]
+    search_fields = ["comment", "hit_reason"]
+    ordering_fields = ["sticky", "hit_reason", "ignore", "audit_type", "first_hit_time", "comment"]
 
     def get_queryset(self):
         return MappingProjectAudit.objects.filter(project_id=self.kwargs["project_pk"])
+
+    def get_object(self):
+        queryset = self.get_queryset()
+
+        return get_object_or_404(queryset, pk=self.kwargs["hit_id"])
