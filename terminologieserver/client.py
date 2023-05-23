@@ -124,7 +124,7 @@ class TerminiologieClient:
 
         offset = offset + step
 
-        if offset < 100: # expansion["total"]:
+        if offset < expansion["total"]:
             yield from self.yield_results(url=url, step=step, offset=offset)
 
     def expand_all_valuesets(self) -> typing.Iterator:
