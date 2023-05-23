@@ -74,6 +74,73 @@ class TerminiologieClient:
                 "Authorization": f"Bearer {token}"
             }
 
+    def get_results(self, url, results=None):
+        """Recursively fetch results.
+
+        Args:
+            session (requests.Session): Authenticated requests session.
+            url (str): Base URL for all requests.
+            results (Optional[list]): Lis of results if available.
+
+        Returns:
+            list with results.
+
+        Raises:
+            TerminologieRequestError in case results could not be fetched.
+        """
+        _url = url
+        if results is None:
+            results = []
+        else:
+            _url += f"&offset={len(results)}"
+
+        response = self.session.get(url=_url)
+
+        if response.status_code != 200:
+            raise TerminologieRequestError(f"Could not fetch ecl results: {response.text}")
+
+        expansion = response.json()["expansion"]
+        if "contains" in expansion:
+            results += expansion["contains"]
+
+        if len(results) < expansion["total"]:
+            results += self.get_results(url=url, results=results)
+        return results
+
+    def yield_results(self, url, step, offset=0):
+        _url = url
+        if offset != 0:
+            _url += f"&offset={offset}"
+
+        response = self.session.get(url=_url)
+
+        if response.status_code != 200:
+            raise TerminologieRequestError(f"Could not fetch ecl results: {response.text}")
+
+        expansion = response.json()["expansion"]
+        if "contains" in expansion:
+            for item in expansion["contains"]:
+                yield item
+
+        offset = offset + step
+
+        if offset < 100: # expansion["total"]:
+            yield from self.yield_results(url=url, step=step, offset=offset)
+
+    def expand_all_valuesets(self) -> typing.Iterator:
+        step = 1000
+        yield from self.yield_results(
+            url=f"{self.uri}/fhir/ValueSet/$expand?_format=json&url=http%3A%2F%2Fsnomed.info%2Fsct%2F11000146104%3Ffhir_vs&system-version=http%3A%2F%2Fsnomed.info%2Fsct%7Chttp%3A%2F%2Fsnomed.info%2Fsct%2F11000146104&includeDesignations=true&elements=expansion.contains.code,expansion.contains.display,expansion.contains.fullySpecifiedName,expansion.contains.active&count={step}",
+            step=step,
+        )
+
+    def yield_snomed_ecl_valueset(self, ecl_query: str) -> typing.Iterator:
+        step = 1000
+        yield from self.yield_results(
+            url=f"{self.uri}/fhir/ValueSet/$expand?count={step}&url=http://snomed.info/sct?fhir_vs=ecl/{urllib.parse.quote_plus(ecl_query)}",
+            step=step
+        )
+
     def expand_snomed_ecl_valueset(self, ecl_query: str) -> dict:
         """
         Expand Snomed ECL Value Set.
@@ -88,42 +155,7 @@ class TerminiologieClient:
             TerminologieRequestError in case ECL query fails.
         """
 
-        def get_results(session, url, results=None):
-            """Recursively fetch results.
-            
-            Args:
-                session (requests.Session): Authenticated requests session.
-                url (str): Base URL for all requests.
-                results (Optional[list]): Lis of results if available.
-
-            Returns:
-                list with results.
-
-            Raises:
-                TerminologieRequestError in case results could not be fetched.
-            """
-            _url = url
-            if results is None:
-                results = []
-            else:
-                _url += f"&offset={len(results)}"
-        
-            response = session.get(url=_url)
-
-            if response.status_code != 200:
-                raise TerminologieRequestError(f"Could not fetch ecl results: {response.text}")
-            
-            expansion = response.json()["expansion"]
-            if "contains" in expansion:
-                results += expansion["contains"]
-            print(expansion["total"])
-
-            if len(results) < expansion["total"]:
-                results += get_results(session=session, url=url, results=results)
-            return results
-
-        return get_results(
-            session=self.session,
+        return self.get_results(
             url=f"{self.uri}/fhir/ValueSet/$expand?count=1000&url=http://snomed.info/sct?fhir_vs=ecl/{urllib.parse.quote_plus(ecl_query)}",
         )
 

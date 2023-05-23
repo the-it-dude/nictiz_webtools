@@ -3,6 +3,7 @@ import os
 from django.core.management.base import BaseCommand
 
 from mapping.tasks.tasks import import_snomed_snowstorm
+from terminologieserver.client import TerminiologieClient
 
 
 class Command(BaseCommand):
@@ -27,14 +28,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # result = import_snomed_snowstorm.apply()
-        headers = self.fetch_headers(username=os.environ.get("TERMINOLOGIE_USERNAME"), password=os.environ.get("TERMINOLOGIE_PASSWORD"))
-        print(repr(headers))
+        client = TerminiologieClient(uri="https://terminologieserver.nl")
+        client.login(username=os.environ.get("TERMINOLOGIE_USERNAME"), password=os.environ.get("TERMINOLOGIE_PASSWORD"))
 
-        data = requests.get(
-            "https://terminologieserver.nl/fhir/ValueSet/$expand?url=http://snomed.info/sct?fhir_vs=refset",
-            # "https://terminologieserver.nl/fhir/CodeSystem/$lookup?system=http://snomed.info/sct&code=99999003&property=child",
-            headers=headers,
-        )
+        data = client.expand_valueset()
+
         print("*" * 80)
-        print(repr(data))
+        # 2print(repr(data))
+        c = 0
+        for x in data:
+            c += 1
+            print('.', end="")
         breakpoint()

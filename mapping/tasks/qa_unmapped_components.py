@@ -68,7 +68,7 @@ def unmapped_components():
 
         # Find all codes in scope
         if project.ecl_scope:
-            expansion_result = client.expand_snomed_ecl_valueset(ecl_query=project.ecl_scope)
+            expansion_result = client.yield_snomed_ecl_valueset(ecl_query=project.ecl_scope)
             for concept in expansion_result:
                 if concept["code"] not in project_codes:
                     create_audit(project=project, code=concept["code"])
