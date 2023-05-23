@@ -1,20 +1,26 @@
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.conf import settings
 from mapping.enums import ProjectAuditTypes
 from mapping.models import MappingCodesystemComponent, MappingProject, MappingProjectAudit, MappingTask, MappingECLConcept
+from terminologieserver.client import TerminiologieClient, TerminologieRequestError
 
 
 @shared_task
 def unmapped_components():
-    def get_concept_codes(task: MappingTask) -> list[str]:
+    """Find unmapped components and create MappingProjectAudit records for each component."""
+
+    logger = get_task_logger(__name__)
+
+    def get_concept_codes(task: MappingTask) -> int:
         """Get list of concepts codes for any given task.
 
         Args:
             task (MappingTask): Task instance.
 
         Returns:
-            List of concept codes.
+            Number of concept codes.
         """
         exclude_components = [] if task.exclusions is None else task.exclusions
 
@@ -35,21 +41,53 @@ def unmapped_components():
             task_id=task.id
         ).exclude(
             code__in=exclusions
-        ).values_list("code", flat=True)
+        ).count()
+
+    client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
+    try:
+        client.login(
+            username=settings.TERMINOLOGIE_USERNAME,
+            password=settings.TERMINOLOGIE_PASSWORD,
+        )
+    except TerminologieRequestError as e:
+        logger.error(f"Failed to login to terminologie.nl: {e}")
+        return
 
     for project in MappingProject.objects.filter(pk=9).all():
         # Clear all audits.
         MappingProjectAudit.objects.filter(project=project).exclude(sticky=True).delete()
 
         project_codes = []
-        project_tasks = MappingTask.objects.filter(project_id=project).select_related("source_component").prefetch_related("mappingeclpartexclusion_set")
+        project_tasks = MappingTask.objects.filter(
+            project_id=project
+        ).select_related("source_component").prefetch_related("mappingeclpartexclusion_set")
         for task in project_tasks:
-            project_codes += get_concept_codes(task=task)
+            codes = get_concept_codes(task=task)
+            if codes > 0:
+                project_codes.append(task.source_component_id)
 
-        components = MappingCodesystemComponent.objects.filter(codesystem_id=project.source_codesystem).exclude(component_id__in=project_codes)
-        for component in components:
-            MappingProjectAudit.objects.get_or_create(
-                project=project,
-                audit_type=ProjectAuditTypes.unmapped_component.value,
-                hit_reason=f"Concept {component.component_id} is niet gemapt."
-            )
+        # Find all codes in scope
+        if project.ecl_scope:
+            expansion_result = client.expand_snomed_ecl_valueset(ecl_query=project.ecl_scope)
+            for concept in expansion_result:
+                if concept["code"] not in project_codes:
+                    create_audit(project=project, code=concept["code"])
+        else:
+
+            components = MappingCodesystemComponent.objects.filter(codesystem_id=project.source_codesystem).exclude(component_id__in=project_codes)
+            for component in components:
+                create_audit(project=project, code=component.component_id)
+
+
+def create_audit(project, code):
+    """Create project audit record.
+
+    Args:
+        project (MappingProject): Project to create audit record for
+        code (str): Concept Code to create audit for
+    """
+    MappingProjectAudit.objects.get_or_create(
+        project=project,
+        audit_type=ProjectAuditTypes.unmapped_component.value,
+        hit_reason=f"Concept {code} is niet gemapt."
+    )

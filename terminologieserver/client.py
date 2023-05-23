@@ -116,6 +116,7 @@ class TerminiologieClient:
             expansion = response.json()["expansion"]
             if "contains" in expansion:
                 results += expansion["contains"]
+            print(expansion["total"])
 
             if len(results) < expansion["total"]:
                 results += get_results(session=session, url=url, results=results)
@@ -123,9 +124,9 @@ class TerminiologieClient:
 
         return get_results(
             session=self.session,
-            url=f"{self.uri}/fhir/ValueSet/$expand?url=http://snomed.info/sct?fhir_vs=ecl/{urllib.parse.quote_plus(ecl_query)}",
+            url=f"{self.uri}/fhir/ValueSet/$expand?count=1000&url=http://snomed.info/sct?fhir_vs=ecl/{urllib.parse.quote_plus(ecl_query)}",
         )
-        
+
     def lookup_code(self, system: str, code: str) -> dict:
         """Retrieves the properties for a code within a CodeSystem.
         

@@ -130,6 +130,7 @@ class MappingProject(models.Model):
     automap_method = models.CharField(
         max_length=50, default="MML", blank=True, null=True
     )
+    ecl_scope = models.TextField(default=None, blank=True, null=True)
 
     status_complete = models.ForeignKey(
         "MappingTaskStatus",
