@@ -64,13 +64,10 @@ def update_ecl_task(
     existing_codes = current_query.concepts.values_list("code", flat=True)
     codes_found = []
 
-    client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
+    client = TerminiologieClient()
     result = {"concepts": {}, "numResults": 0}
     try:
-        client.login(
-            username=settings.TERMINOLOGIE_USERNAME,
-            password=settings.TERMINOLOGIE_PASSWORD,
-        )
+        client.login()
 
         expansion_result = client.expand_snomed_ecl_valueset(ecl_query=query)
 

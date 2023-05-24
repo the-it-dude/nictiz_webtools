@@ -28,8 +28,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # result = import_snomed_snowstorm.apply()
-        client = TerminiologieClient(uri="https://terminologieserver.nl")
-        client.login(username=os.environ.get("TERMINOLOGIE_USERNAME"), password=os.environ.get("TERMINOLOGIE_PASSWORD"))
+        client = TerminiologieClient()
+        client.login()
 
         data = client.expand_valueset()
 

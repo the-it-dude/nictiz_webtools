@@ -3,6 +3,7 @@ import typing
 import requests
 import urllib.parse
 import logging
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -29,36 +30,33 @@ class TerminiologieClient:
     uri: typing.Optional[str] = None  # Contains base URI for terminologie server
     session: typing.Optional[requests.Session] = None  # Contains request session with auth headers
 
-    def __init__(self, uri: str) -> None:
+    def __init__(self) -> None:
         """Init class by storing base URI and starting requests.Session.
 
         Args:
             uri (str): Base URI for terminologie server. Usually corresponds to settings.TERMINOLOGIE_URI
             output_format (OutputFormat): Output format to use.
         """
-        self.uri = uri
+        self.uri = settings.TERMINOLOGIE_URL
         self.session = requests.Session()
 
-    def login(self, username: str, password: str) -> None:
+    def login(self) -> None:
         """
         Fetch Login details using login and password.
         AUTH Details will be stored to self.session.headers.
 
-        Args:
-            username (str): Username
-            password (str): Password
-
         Raises:
             TerminologieRequestError in case login is unsuccessul or another error occured.
         """
+
         try:
             response = requests.post(
                 url=f"{self.uri}/auth/realms/nictiz/protocol/openid-connect/token",
                 data={
                     "grant_type": "password",
                     "client_id": "cli_client",
-                    "username": username,
-                    "password": password
+                    "username": settings.TERMINOLOGIE_USERNAME,
+                    "password": settings.TERMINOLOGIE_PASSWORD,
                 },
                 timeout=10
             )
@@ -115,7 +113,13 @@ class TerminiologieClient:
         response = self.session.get(url=_url)
 
         if response.status_code != 200:
-            raise TerminologieRequestError(f"Could not fetch ecl results: {response.text}")
+            if "error" in response.json() and response.json()["error"] == "invalid_token":
+                self.login()
+                response = self.session.get(url=_url)
+                if response.status_code != 200:
+                    raise TerminologieRequestError(f"Could not fetch ecl results: {response.text}")
+            else:
+                raise TerminologieRequestError(f"Could not fetch ecl results: {response.text}")
 
         expansion = response.json()["expansion"]
         if "contains" in expansion:

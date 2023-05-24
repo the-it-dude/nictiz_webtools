@@ -214,10 +214,11 @@ class MappingProjectAuditSerializer(serializers.ModelSerializer):
             "id",
             "project_id",
             "audit_type",
+            "extra_1",
+            "extra_2",
             "hit_reason",
             "comment",
             "ignore",
             "ignore_user",
-            "sticky",
             "first_hit_time"
         )

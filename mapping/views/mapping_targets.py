@@ -150,9 +150,9 @@ class MappingProjectAuditListAPIView(ListAPIView, UpdateAPIView):
     ]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, django_filters.rest_framework.DjangoFilterBackend]
 
-    filterset_fields = ["ignore", "hit_reason", "sticky"]
-    search_fields = ["comment", "hit_reason"]
-    ordering_fields = ["sticky", "hit_reason", "ignore", "audit_type", "first_hit_time", "comment"]
+    filterset_fields = ["ignore", "hit_reason",]
+    search_fields = ["comment", "hit_reason", "extra_1", "extra_2"]
+    ordering_fields = ["hit_reason", "ignore", "audit_type", "first_hit_time", "comment"]
 
     def get_queryset(self):
         return MappingProjectAudit.objects.filter(project_id=self.kwargs["project_pk"])

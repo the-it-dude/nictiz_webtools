@@ -471,12 +471,11 @@ class MappingProjectAudit(models.Model):
 
     audit_type = models.TextField()
     project = models.ForeignKey(MappingProject, on_delete=models.PROTECT)
+    extra_1 = models.CharField(max_length=255, default=None, blank=True, null=True)
+    extra_2 = models.CharField(max_length=255, default=None, blank=True, null=True)
     hit_reason = models.TextField(default=None, blank=True, null=True)
     comment = models.TextField(default=None, blank=True, null=True)
     ignore = models.BooleanField(default=False)  # Whitelist
-    sticky = models.BooleanField(
-        default=False
-    )  # True = will not be removed with each audit cycle
     ignore_user = models.ForeignKey(  # User adding the whitelist
         User, default=None, blank=True, null=True, on_delete=models.PROTECT
     )

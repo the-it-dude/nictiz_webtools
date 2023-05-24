@@ -43,19 +43,16 @@ def unmapped_components():
             code__in=exclusions
         ).count()
 
-    client = TerminiologieClient(uri=settings.TERMINOLOGIE_URL)
+    client = TerminiologieClient()
     try:
-        client.login(
-            username=settings.TERMINOLOGIE_USERNAME,
-            password=settings.TERMINOLOGIE_PASSWORD,
-        )
+        client.login()
     except TerminologieRequestError as e:
         logger.error(f"Failed to login to terminologie.nl: {e}")
         return
 
-    for project in MappingProject.objects.filter(pk=9).all():
+    for project in MappingProject.objects.all():
         # Clear all audits.
-        MappingProjectAudit.objects.filter(project=project).exclude(sticky=True).delete()
+        MappingProjectAudit.objects.filter(project=project).exclude(ignore=True).delete()
 
         project_codes = []
         project_tasks = MappingTask.objects.filter(
