@@ -50,7 +50,7 @@ def unmapped_components():
         logger.error(f"Failed to login to terminologie.nl: {e}")
         return
 
-    for project in MappingProject.objects.all():
+    for project in MappingProject.objects.filter(id=9).all():
         # Clear all audits.
         MappingProjectAudit.objects.filter(project=project).exclude(ignore=True).delete()
 
@@ -68,15 +68,14 @@ def unmapped_components():
             expansion_result = client.yield_snomed_ecl_valueset(ecl_query=project.ecl_scope)
             for concept in expansion_result:
                 if concept["code"] not in project_codes:
-                    create_audit(project=project, code=concept["code"])
+                    create_audit(project=project, code=concept["code"], extra_1=concept["display"])
         else:
-
             components = MappingCodesystemComponent.objects.filter(codesystem_id=project.source_codesystem).exclude(component_id__in=project_codes)
             for component in components:
-                create_audit(project=project, code=component.component_id)
+                create_audit(project=project, code=component.component_id, extra_1=component.component_title)
 
 
-def create_audit(project, code):
+def create_audit(project, code, extra_1=None, extra_2=None):
     """Create project audit record.
 
     Args:
@@ -86,5 +85,7 @@ def create_audit(project, code):
     MappingProjectAudit.objects.get_or_create(
         project=project,
         audit_type=ProjectAuditTypes.unmapped_component.value,
+        extra_1=extra_1,
+        extra_2=extra_2,
         hit_reason=f"Concept {code} is niet gemapt."
     )
