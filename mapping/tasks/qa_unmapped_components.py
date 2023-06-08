@@ -50,7 +50,7 @@ def unmapped_components():
         logger.error(f"Failed to login to terminologie.nl: {e}")
         return
 
-    for project in MappingProject.objects.filter(id=9).all():
+    for project in MappingProject.objects.all():
         # Clear all audits.
         MappingProjectAudit.objects.filter(project=project).exclude(ignore=True).delete()
 
