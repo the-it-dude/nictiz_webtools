@@ -78,6 +78,14 @@ class MappingTaskExclusionsView(TaskRelatedView, ListAPIView):
     """List MappingTask exclusions."""
 
     serializer_class = MappingECLConceptExclusionSerializer
+    filter_backends = [
+        filters.OrderingFilter,
+    ]
+    ordering_fields = [
+        "task__source_component__component_id",
+        "task__source_component__component_title",
+        "code",
+    ]
 
     def get_queryset(self):
         task = MappingTask.objects.select_related("source_component").get(pk=self.kwargs["task_pk"])
