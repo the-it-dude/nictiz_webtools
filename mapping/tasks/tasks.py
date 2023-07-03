@@ -120,7 +120,6 @@ def update_ecl_task(
                 hit_reason=f"{current_query.id} geeft geen resultaten.",
             )
         else:
-            # Cleanup audits.
             MappingTaskAudit.objects.filter(
                 task=current_query.task,
                 audit_type=AuditTypes.empty_query
