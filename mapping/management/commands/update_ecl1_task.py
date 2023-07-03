@@ -12,17 +12,17 @@ class Command(BaseCommand):
     help = "Create base groups in fresh DB"
 
     def handle(self, *args, **options):
-        rec = MappingEclPart.objects.get(pk=3)
-        UpdateECL1Task(
-            record_id=3,
-            query="9847007 | Structure of hilum of adrenal gland (body structure) |"
-        )
-        rec.refresh_from_db()
-        print("*" * 80)
-        print(rec.result)
+        rec = MappingEclPart.objects.get(pk=29)
+        # UpdateECL1Task(
+        #     record_id=29,
+        #     query="9847007 | Structure of hilum of adrenal gland (body structure) |"
+        # )
+        # rec.refresh_from_db()
+        # print("*" * 80)
+        # print(rec.result)
 
         mapping_record = update_ecl_task(
-            record_id=3,
+            record_id=29,
             query="9847007 | Structure of hilum of adrenal gland (body structure) |"
         )
 

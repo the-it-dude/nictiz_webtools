@@ -218,7 +218,7 @@ class TerminiologieClient:
             
             value = None
             if value_dict["name"] == "value":
-                value = value_dict["valueCode"]
+                value = value_dict.get("valueCode", value_dict.get("valueCoding", value_dict.get("valueString", None)))
             elif value_dict["name"] == "valueBoolean":
                 value = value_dict["valueBoolean"]
             elif value_dict["name"] == "valueString":
