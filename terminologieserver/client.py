@@ -190,7 +190,7 @@ class TerminiologieClient:
             dictionary with lang and term keys.
         """
         data = {
-            i['name']: i['valueString']
+            i['name']: i.get('valueString')
             for i in params if i['name'] not in ["designation", "property"]
         }
 
