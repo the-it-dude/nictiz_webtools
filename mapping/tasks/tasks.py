@@ -79,7 +79,7 @@ def update_ecl_task(
             result["concepts"][
                 code["code"]
             ] = client.expanded_data_to_snowstorm_mapping(expanded_data=code)
-    except TerminologieRequestError as e:
+    except Exception as e:
         current_query.failed = True
         current_query.error = str(e)
         result = {}
